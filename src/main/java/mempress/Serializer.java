@@ -1,34 +1,56 @@
 package mempress;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+//import java.util.zip.CRC32;
 
 
-
-public class Serializer {
+public class Serializer<T> {
 	
-	public static void ser(Object o, String src) throws IOException{
+	public static <T>ArrayElement ser(T obj) throws IOException{
 		
-	     FileOutputStream fileOut = new FileOutputStream(src);
-	     ObjectOutputStream out = new ObjectOutputStream(fileOut);
-	     out.writeObject(o);
-	     out.close();
-	     fileOut.close();
+		Class<?> ctype = obj.getClass();
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		
+		oos.writeObject(obj);
+		
+		long hash = oos.hashCode();
+		/*
+		byte[] data = baos.toByteArray();
+		CRC32 c32 = new CRC32();
+		c32.update(data);
+		hash = c32.getValue();
+		*/
+		
+		ArrayElement ae = new ArrayElement(hash, baos, ctype);
+		
+		return ae;
 	}
 	
-	public static Object des(String src) throws IOException, ClassNotFoundException{
-		FileInputStream fileIn = new FileInputStream(src);
-		ObjectInputStream in = new ObjectInputStream(fileIn);
-		Object o = in.readObject();
-		in.close();
-		fileIn.close();
+	public static Object des(ArrayElement ae) throws IOException, ClassNotFoundException{
 		
+		Object o=pipeIt(ae.getStream()).readObject();
+				
 		return o;
 	}
 	
+	public static ObjectInputStream pipeIt(ByteArrayOutputStream baos) throws IOException{
+		
+		PipedOutputStream pos = new PipedOutputStream();
+		PipedInputStream pis = new PipedInputStream();
+		
+		pos.connect(pis);
+		baos.writeTo(pos);
+		ObjectInputStream ois = new ObjectInputStream(pis);
+		
+		return ois;
+	}
 	
 	
 }
