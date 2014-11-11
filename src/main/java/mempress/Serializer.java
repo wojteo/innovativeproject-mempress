@@ -39,6 +39,15 @@ public class Serializer<T> {
 				
 		return o;
 	}
+
+
+	public static Object des(byte[] b) throws IOException, ClassNotFoundException{
+		ByteArrayInputStream bais = new ByteArrayInputStream(b);
+		ObjectInputStream ois = new ObjectInputStream(bais);
+		
+		Object o = ois.readObject();
+		return o;
+	}
 	
 	public static ObjectInputStream pipeIt(ByteArrayOutputStream baos) throws IOException{
 		
