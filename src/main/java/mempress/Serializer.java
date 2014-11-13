@@ -10,7 +10,7 @@ import java.io.PipedOutputStream;
 
 
 public class Serializer<T> {
-	
+
 	public static <T>ArrayElement ser(T obj) throws IOException{
 		
 		Class<?> ctype = obj.getClass();
@@ -32,7 +32,8 @@ public class Serializer<T> {
 		
 		return ae;
 	}
-	
+
+
 	public static Object des(ArrayElement ae) throws IOException, ClassNotFoundException{
 		
 		Object o=pipeIt(ae.getStream()).readObject();

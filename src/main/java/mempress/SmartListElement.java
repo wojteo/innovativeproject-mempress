@@ -1,5 +1,6 @@
 package mempress;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -22,4 +23,8 @@ public abstract class SmartListElement<E> {
     public long getChecksum() {
         return checksum;
     }
+
+    public void release() throws IOException {}
+
+
 }
