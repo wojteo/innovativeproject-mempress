@@ -17,11 +17,15 @@ public class Serializer {
 	
 	//Serializacja
 	//do tablicy
-	public static <T>byte[] ser(T obj) throws IOException{
+	public static <T>byte[] ser(T obj){
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		
-		oos.writeObject(obj);
+		try{
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			
+			oos.writeObject(obj);
+		}catch(IOException e){
+			//ignore
+		}
 		byte[] b = baos.toByteArray();
 		
 		return b;
@@ -79,11 +83,18 @@ public class Serializer {
 	
 	// Deserializacja
 	//z tablicy
-	public static Object des(byte[] b) throws IOException, ClassNotFoundException{
-		ByteArrayInputStream bais = new ByteArrayInputStream(b);
-		ObjectInputStream ois = new ObjectInputStream(bais);
+	public static Object des(byte[] b){
 		
-		Object o = ois.readObject();
+		ByteArrayInputStream bais = new ByteArrayInputStream(b);
+		Object o=null;
+		try {
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			
+			o = ois.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			//ignore
+		}
+		
 		return o;
 	}
 	
