@@ -99,12 +99,19 @@ public class Serializer {
 	}
 	
 	//z pliku
-	public static Object desf(File file) throws IOException, ClassNotFoundException{
-		FileInputStream bais = new FileInputStream(file);
-		ObjectInputStream ois = new ObjectInputStream(bais);
+	public static Object desf(File file) {
+		FileInputStream bais;
+		Object o=null;
+		try {
+			bais = new FileInputStream(file);
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			
+			o = ois.readObject();
+			ois.close();
+		} catch (ClassNotFoundException | IOException e) {
+			//ignore
+		}
 		
-		Object o = ois.readObject();
-		ois.close();
 		return o;
 	}
 			
