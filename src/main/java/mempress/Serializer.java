@@ -1,47 +1,84 @@
 package mempress;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-//import java.util.zip.CRC32;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 
-public class Serializer<T> {
-
-	public static <T>ArrayElement ser(T obj) throws IOException{
-		
-		Class<?> ctype = obj.getClass();
-		
+public class Serializer {
+	
+	
+	//Serializacja
+	//do tablicy
+	public static <T>byte[] ser(T obj) throws IOException{
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		
 		oos.writeObject(obj);
+		byte[] b = baos.toByteArray();
 		
-		long hash = oos.hashCode();
-		/*
-		byte[] data = baos.toByteArray();
-		CRC32 c32 = new CRC32();
-		c32.update(data);
-		hash = c32.getValue();
-		*/
-		
-		ArrayElement ae = new ArrayElement(hash, baos, ctype);
-		
-		return ae;
+		return b;
 	}
-
-
-	public static Object des(ArrayElement ae) throws IOException, ClassNotFoundException{
+	
+	//do pliku
+	public static <T>File serf(T obj) throws IOException{
 		
-		Object o=pipeIt(ae.getStream()).readObject();
-				
-		return o;
+		String tDir = System.getProperty("user.dir");//java.io.tmpdir");
+		File tFile = File.createTempFile("tmpfile",".mempress", new File(tDir));
+		
+		FileOutputStream fos = new FileOutputStream(tFile);
+		ObjectOutputStream oos = new ObjectOutputStream(fos);
+		
+		oos.writeObject(obj);
+		fos.flush();
+		fos.close();
+		oos.close();
+		
+		tFile.deleteOnExit();
+		return tFile;
 	}
-
-
+	
+	//do zip-tablicy
+	public static <T>byte[] serz(T obj) throws IOException{
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		GZIPOutputStream gout = new GZIPOutputStream(baos);
+		ObjectOutputStream oos = new ObjectOutputStream(gout);
+		oos.writeObject(obj);
+		oos.flush();
+		gout.finish();
+		return baos.toByteArray();
+			 
+	}
+		
+	//do zip-pliku
+	public static <T>File serfz(T obj) throws IOException{
+			
+		String tDir = System.getProperty("user.dir");//java.io.tmpdir");
+		File tFile = File.createTempFile("tmpfile",".mempress", new File(tDir));
+		
+		FileOutputStream fos = new FileOutputStream(tFile);
+	
+	    GZIPOutputStream gout = new GZIPOutputStream(fos);
+		ObjectOutputStream oos = new ObjectOutputStream(gout);
+		
+		oos.writeObject(obj);
+		fos.flush();
+		fos.close();
+		
+		tFile.deleteOnExit();
+		return tFile;
+	}
+	
+	
+	// Deserializacja
+	//z tablicy
 	public static Object des(byte[] b) throws IOException, ClassNotFoundException{
 		ByteArrayInputStream bais = new ByteArrayInputStream(b);
 		ObjectInputStream ois = new ObjectInputStream(bais);
@@ -50,17 +87,35 @@ public class Serializer<T> {
 		return o;
 	}
 	
-	public static ObjectInputStream pipeIt(ByteArrayOutputStream baos) throws IOException{
+	//z pliku
+	public static Object desf(File file) throws IOException, ClassNotFoundException{
+		FileInputStream bais = new FileInputStream(file);
+		ObjectInputStream ois = new ObjectInputStream(bais);
 		
-		PipedOutputStream pos = new PipedOutputStream();
-		PipedInputStream pis = new PipedInputStream();
+		Object o = ois.readObject();
+		ois.close();
+		return o;
+	}
+			
+	//z zip-tablice
+	public static Object desz(byte[] b) throws IOException, ClassNotFoundException{
+		ByteArrayInputStream bais = new ByteArrayInputStream(b);
+		GZIPInputStream gin = new GZIPInputStream(bais);
+		ObjectInputStream ois = new ObjectInputStream(gin);
 		
-		pos.connect(pis);
-		baos.writeTo(pos);
-		ObjectInputStream ois = new ObjectInputStream(pis);
-		
-		return ois;
+		Object o = ois.readObject();
+		return o;
 	}
 	
+	//z zip-pliku
+	public static Object desfz(File file) throws IOException, ClassNotFoundException{
+		FileInputStream fis = new FileInputStream(file);
+		GZIPInputStream gin = new GZIPInputStream(fis);
+		ObjectInputStream ois = new ObjectInputStream(gin);
+		
+		Object o = ois.readObject();
+		ois.close();
+		return o;
+	}
 	
 }
