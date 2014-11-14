@@ -12,7 +12,7 @@ import java.util.*;
 public class SmartList<E> implements List<E> {
     private List<SmartListElement<E>> _list =
             new ArrayList<>();
-    private DecisionTree<E> decisionTree = new DecisionTree<>();
+    private final DecisionTree<E> decisionTree = new DecisionTree<>();
 
     @Override
     public int size() {
@@ -21,7 +21,7 @@ public class SmartList<E> implements List<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return null;
+        return new IteratorDecorator(_list.iterator());
     }
 
     @Override
@@ -171,7 +171,7 @@ public class SmartList<E> implements List<E> {
      */
     @Override
     public ListIterator<E> listIterator() {
-        return null;
+        return new ListIteratorDecorator(_list.listIterator());
     }
 
     /**
@@ -222,7 +222,77 @@ public class SmartList<E> implements List<E> {
     @Override
     public boolean add(E e) {
         SmartListElement<E> element = decisionTree.processObject(e);
-        _list.add(element);
+        return _list.add(element);
     }
 
+    private class ListIteratorDecorator implements ListIterator<E> {
+        private final ListIterator<SmartListElement<E>> it;
+
+        public ListIteratorDecorator(ListIterator<SmartListElement<E>> iterator) {
+            it = iterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public E next() {
+            return it.next().getObject();
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return it.hasPrevious();
+        }
+
+        @Override
+        public E previous() {
+            return it.previous().getObject();
+        }
+
+        @Override
+        public int nextIndex() {
+            return it.nextIndex();
+        }
+
+        @Override
+        public int previousIndex() {
+            return it.previousIndex();
+        }
+
+        @Override
+        public void remove() {
+            it.remove();
+        }
+
+        @Override
+        public void set(E e) {
+            it.set(decisionTree.processObject(e));
+        }
+
+        @Override
+        public void add(E e) {
+            it.add(decisionTree.processObject(e));
+        }
+    }
+
+    private class IteratorDecorator implements Iterator<E> {
+        private final Iterator<SmartListElement<E>> it;
+
+        public IteratorDecorator(Iterator<SmartListElement<E>> iterator) {
+            it = iterator;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public E next() {
+            return it.next().getObject();
+        }
+    }
 }
