@@ -23,7 +23,7 @@ public class FileSmartListElement<E> extends SmartListElement<E> {
 
     @Override
     public E getObject() {
-        Object des = Serializer.des(storedData);
+        Object des = Serializer.desf(storedData);
         E et = objectType.cast(des);
 
         return et;
