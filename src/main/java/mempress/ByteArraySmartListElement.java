@@ -1,6 +1,9 @@
 package mempress;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+
 
 /**
  * Created by bartek on 2014-11-13.
@@ -8,6 +11,21 @@ import java.io.IOException;
 public class ByteArraySmartListElement<E> extends SmartListElement<E> {
     protected byte[] serialized;
     protected Class<E> objType;
+    
+    public static Object des(byte[] b){
+		
+		ByteArrayInputStream bais = new ByteArrayInputStream(b);
+		Object o=null;
+		try {
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			
+			o = ois.readObject();
+		} catch (ClassNotFoundException | IOException e) {
+			//ignore
+		}
+		
+		return o;
+	}
 
     public ByteArraySmartListElement(long checksum, byte[] sarray, Class<E> objectType) {
         super(checksum);
@@ -19,7 +37,7 @@ public class ByteArraySmartListElement<E> extends SmartListElement<E> {
 
     @Override
     public E getObject() {
-        Object des = Serializer.des(serialized);
+        Object des = des(serialized);
         E retOb = objType.cast(des);
 
         return retOb;

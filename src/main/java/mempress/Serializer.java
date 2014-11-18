@@ -83,6 +83,7 @@ public class Serializer {
 	
 	// Deserializacja
 	//z tablicy
+	@Deprecated
 	public static Object des(byte[] b){
 		
 		ByteArrayInputStream bais = new ByteArrayInputStream(b);
@@ -99,6 +100,7 @@ public class Serializer {
 	}
 	
 	//z pliku
+	@Deprecated
 	public static Object desf(File file) {
 		FileInputStream bais;
 		Object o=null;
