@@ -11,29 +11,31 @@ import java.io.ObjectInputStream;
 public class ByteArraySmartListElement<E> extends SmartListElement<E> {
     protected byte[] serialized;
     protected Class<E> objType;
+    protected int size;
     
-    public static Object des(byte[] b){
-		
-		ByteArrayInputStream bais = new ByteArrayInputStream(b);
-		Object o=null;
-		try {
-			ObjectInputStream ois = new ObjectInputStream(bais);
-			
-			o = ois.readObject();
-		} catch (ClassNotFoundException | IOException e) {
-			//ignore
-		}
-		
-		return o;
-	}
-
     public ByteArraySmartListElement(long checksum, byte[] sarray, Class<E> objectType) {
         super(checksum);
         if(sarray == null || objectType == null)
             throw new NullPointerException();
-        serialized = sarray;
-        objType = objectType;
+        this.serialized = sarray;
+        this.objType = objectType;
+        this.size=sarray.length;
     }
+    
+    public static Object des(byte[] b){
+		
+  		ByteArrayInputStream bais = new ByteArrayInputStream(b);
+  		Object o=null;
+  		try {
+  			ObjectInputStream ois = new ObjectInputStream(bais);
+  			
+  			o = ois.readObject();
+  		} catch (ClassNotFoundException | IOException e) {
+  			//ignore
+  		}
+  		
+  		return o;
+  	}
 
     @Override
     public E getObject() {

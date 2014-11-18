@@ -1,6 +1,5 @@
 package mempress;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,37 +38,6 @@ public class DecisionTree<E> {
         public <E> SmartListElement<E> processObject(E obj, ObjectDataCarrier metadata);
     }
 
-    private static class DecisionStoreIt implements DecisionTreeElement {
-        @Override
-        public boolean checkConditions(Object obj, ObjectDataCarrier metadata) {
-            boolean cond = true;
-
-            return true;
-        }
-
-        @Override
-        public <E> SmartListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
-            return new SimpleSmartListElement<E>(obj);
-        }
-    }
-
-    private static class DecisionSerializeIt implements DecisionTreeElement {
-        @Override
-        public boolean checkConditions(Object obj, ObjectDataCarrier metadata) {
-            boolean cond = true;
-            cond = cond && obj instanceof Serializable;
-
-            return cond;
-        }
-
-        @Override
-        public <E> SmartListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
-            int hash = obj.hashCode();
-            byte[] s = Serializer.ser(obj);
-            Class<E> cl = (Class<E>)obj.getClass();
-            return new ByteArraySmartListElement<>(hash, s, cl);
-        }
-    }
 }
 
 class ObjectDataCarrier
