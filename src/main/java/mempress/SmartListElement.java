@@ -11,15 +11,22 @@ import java.io.InputStream;
  * bez zagłębiania się w szczegóły.
  * @param <E>
  */
-public abstract class SmartListElement<E> {
+public abstract class SmartListElement<E> implements Comparable<SmartListElement<E>> {
     protected final long hashcode;
     protected long objectSize;
+    private int useCount;
 
     protected SmartListElement(long hashcode) {
         this.hashcode = hashcode;
     }
 
-    public abstract E getObject();
+    public E get()
+    {
+        ++useCount;
+        return getObject();
+    }
+
+    protected abstract E getObject();
 
     public long getHashCode() {
         return hashcode;
@@ -28,4 +35,20 @@ public abstract class SmartListElement<E> {
     public void release() throws IOException {}
 
     public long getObjectSize() { return objectSize; }
+
+    public int getUseCount() {
+        return useCount;
+    }
+
+    @Override
+    public int compareTo(SmartListElement<E> o) {
+        int order;
+        order = ((Long)hashcode).compareTo(o.hashcode);
+
+        if(order == 0) {
+            order = ((Long)objectSize).compareTo(o.objectSize);
+        }
+
+        return -order;
+    }
 }
