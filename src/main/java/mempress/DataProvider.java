@@ -17,7 +17,7 @@ public class DataProvider implements Serializable{
 	private Random rr = new Random((long)1234);
 	
 	public enum ObjectSize {
-		SMALL(1000), MEDIUM(10000), BIG(100000), HUGE(10000000);
+		SMALL(100), MEDIUM(1000), BIG(10000), HUGE(1000000);
 		
 		private int size;
 
