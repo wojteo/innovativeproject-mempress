@@ -12,16 +12,16 @@ import java.io.InputStream;
  * @param <E>
  */
 public abstract class SmartListElement<E> {
-    protected final long checksum;
+    protected final long hashcode;
 
-    protected SmartListElement(long checksum) {
-        this.checksum = checksum;
+    protected SmartListElement(long hashcode) {
+        this.hashcode = hashcode;
     }
 
     public abstract E getObject();
 
-    public long getChecksum() {
-        return checksum;
+    public long getHashCode() {
+        return hashcode;
     }
 
     public void release() throws IOException {}
