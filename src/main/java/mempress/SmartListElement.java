@@ -13,6 +13,7 @@ import java.io.InputStream;
  */
 public abstract class SmartListElement<E> {
     protected final long hashcode;
+    protected long objectSize;
 
     protected SmartListElement(long hashcode) {
         this.hashcode = hashcode;
@@ -26,5 +27,5 @@ public abstract class SmartListElement<E> {
 
     public void release() throws IOException {}
 
-
+    public long getObjectSize() { return objectSize; }
 }

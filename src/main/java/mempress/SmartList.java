@@ -205,7 +205,7 @@ public class SmartList<E> implements List<E> {
         long hash = o.hashCode();
         boolean ret = false;
         for(SmartListElement<E> sle : _list) {
-            if(sle.getChecksum() == hash) {
+            if(sle.getHashCode() == hash) {
                 ret = true;
                 break;
             }

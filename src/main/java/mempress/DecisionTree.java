@@ -31,7 +31,7 @@ public class DecisionTree<E> {
             }
         }
 
-        throw new java.util.concurrent.CompletionException();
+        throw new MempressException("Object isn't supported");
     }
 
     public interface DecisionTreeElement {
