@@ -12,6 +12,6 @@ public class DecisionStoreIt implements DecisionTreeElement {
 
     @Override
     public <E> SmartListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
-        return new SimpleSmartListElement<E>(obj);
-    }
+		return new SimpleSmartListElement<E>(obj);
+	}
 }
