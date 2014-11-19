@@ -1,6 +1,7 @@
 package mempress;
 
 import java.io.Serializable;
+
 import mempress.DecisionTree.DecisionTreeElement;
 
 public class DecisionSerializeIt<E> implements DecisionTreeElement<E> {
@@ -24,6 +25,6 @@ public class DecisionSerializeIt<E> implements DecisionTreeElement<E> {
 
     @Override
     public Class<? extends SmartListElement<E>> getReturnType() {
-        return ByteArraySmartListElement.class;
+        return (Class<? extends SmartListElement<E>>) ByteArraySmartListElement.class;
     }
 }
