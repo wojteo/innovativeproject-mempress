@@ -62,7 +62,7 @@ public class ListTester {
 				} else
 					++p;
 				break;
-			case 'p': // nic nie rób
+			case 'p': // nic nie rob
 				++p;
 				break;
 			}
