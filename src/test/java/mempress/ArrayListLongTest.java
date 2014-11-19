@@ -23,7 +23,7 @@ public class ArrayListLongTest {
 			public void clear() {
 				super.clear();
 				trimToSize();
-				System.out.println("Wyczyszczono listê");
+				System.out.println("Wyczyszczono liste");
 			}
 		};
 		
