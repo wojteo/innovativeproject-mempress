@@ -12,9 +12,9 @@ import java.io.InputStream;
  * @param <E>
  */
 public abstract class SmartListElement<E> implements Comparable<SmartListElement<E>> {
-    protected final long hashcode;
+    protected long hashcode;
     protected long objectSize;
-    private int useCount;
+    protected int useCount;
 
     protected SmartListElement(long hashcode) {
         this.hashcode = hashcode;
@@ -43,12 +43,12 @@ public abstract class SmartListElement<E> implements Comparable<SmartListElement
     @Override
     public int compareTo(SmartListElement<E> o) {
         int order;
-        order = ((Long)hashcode).compareTo(o.hashcode);
+        order = Integer.compare(useCount, o.useCount);
 
         if(order == 0) {
-            order = ((Long)objectSize).compareTo(o.objectSize);
+            order = Long.compare(objectSize, o.objectSize);
         }
 
-        return -order;
+        return order;
     }
 }
