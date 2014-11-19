@@ -17,6 +17,6 @@ public class DecisionStoreIt<E> implements DecisionTreeElement<E> {
 
     @Override
     public Class<? extends SmartListElement<E>> getReturnType() {
-        return SimpleSmartListElement.class;
+        return (Class<? extends SmartListElement<E>>)SimpleSmartListElement.class;
     }
 }
