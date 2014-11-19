@@ -40,13 +40,18 @@ public abstract class SmartListElement<E> implements Comparable<SmartListElement
         return useCount;
     }
 
+    /**
+     * Porównywanie najpierw względem liczby użyć, następnie rozmiaru
+     * @param o
+     * @return
+     */
     @Override
     public int compareTo(SmartListElement<E> o) {
         int order;
         order = Integer.compare(useCount, o.useCount);
 
         if(order == 0) {
-            order = Long.compare(objectSize, o.objectSize);
+            order = -Long.compare(objectSize, o.objectSize);
         }
 
         return order;
