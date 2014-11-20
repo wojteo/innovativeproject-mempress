@@ -39,12 +39,12 @@ public class DataProvider implements Serializable{
 	
 	public DataProvider(int i){
 		fillData(ObjectSize.BIG.getSize());
-		child = new DataProvider(i-1);
+		//child = new DataProvider(i-1);
 	}
 	
 	public DataProvider(int size, int i){
 		fillData(size);
-		child = new DataProvider(size, i-1);
+		//child = new DataProvider(size, i-1);
 	}
 
 	
