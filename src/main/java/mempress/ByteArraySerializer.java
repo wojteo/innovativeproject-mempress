@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class ByteArraySerializer extends Serializer {
+public class ByteArraySerializer implements Serializer {
 
 	@Override
 	public ClassData ser(Object obj) {

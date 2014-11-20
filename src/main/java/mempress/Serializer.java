@@ -1,13 +1,9 @@
 package mempress;
 
-public abstract class Serializer {
+public interface Serializer {
 	
-	public ClassData ser(Object obj){
-		return null;
-	};
+	public ClassData ser(Object obj);
 	
-	public Object des(ClassData cd){
-		return null;
-	};
+	public Object des(ClassData cd);
 	
 }

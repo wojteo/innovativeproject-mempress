@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class FileSerializer extends Serializer {
+public class FileSerializer implements Serializer {
 
 	@Override
 	public ClassData ser(Object obj) {
