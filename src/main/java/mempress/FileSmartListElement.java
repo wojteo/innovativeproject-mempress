@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 /**
  * Created by bartek on 2014-11-13.
  */
+@Deprecated
 public class FileSmartListElement<E> extends SmartListElement<E> {
 	protected File storedData;
 	protected Class<E> objectType;

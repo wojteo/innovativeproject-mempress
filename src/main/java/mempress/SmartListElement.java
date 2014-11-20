@@ -11,6 +11,7 @@ import java.io.InputStream;
  * bez zagłębiania się w szczegóły.
  * @param <E>
  */
+@Deprecated
 public abstract class SmartListElement<E> implements Comparable<SmartListElement<E>> {
     protected long hashcode;
     protected long objectSize;

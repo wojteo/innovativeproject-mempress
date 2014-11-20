@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
  * @param <E>
  */
 public class SmartList<E> implements List<E> {
-    private List<SmartListElement<E>> _list;
+    private List<ListElement<E>> _list;
     private DecisionTree<E> _decisionTree;
-    private PriorityQueue<SmartListElement<E>> _serializationQueue;
+    private PriorityQueue<ListElement<E>> _serializationQueue;
     private ListWeightListener weight;
 
     public SmartList() {
@@ -72,7 +72,7 @@ public class SmartList<E> implements List<E> {
         Preconditions.checkArgument(colsize > 0);
 
 
-        for(SmartListElement<E> sle : _list) {
+        for(ListElement<E> sle : _list) {
             Object obj = sle.get();
             if(obj == null)
                 continue;
@@ -94,9 +94,9 @@ public class SmartList<E> implements List<E> {
 
         Preconditions.checkArgument(collectionSize > 0);
 
-        for(SmartListElement<E> sle : _list) {
+        for(ListElement<E> sle : _list) {
             for(long hc : hashcodes) {
-                if(sle.hashcode == hc)
+                if(sle.getHashCode() == hc)
                     ++counter;
             }
         }
@@ -107,12 +107,12 @@ public class SmartList<E> implements List<E> {
     @Override
     public boolean addAll(Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
-        SmartListElement<E> sle;
+        ListElement<E> sle;
         boolean b = true;
         for(E e : c) {
             sle = _decisionTree.processObject(e);
             b = b && _list.add(sle) && _serializationQueue.add(sle);
-            weight.increase(sle.getObjectSize());
+            weight.increase(sle.getSize());
         }
 
         return b;
@@ -172,29 +172,29 @@ public class SmartList<E> implements List<E> {
     @Override
     public E set(int index, E element) {
         Preconditions.checkNotNull(element);
-        SmartListElement<E> el = _decisionTree.processObject(element),
+        ListElement<E> el = _decisionTree.processObject(element),
                 old = _list.set(index, el);
         _serializationQueue.remove(old);
-        weight.decrease(old.getObjectSize());
-        weight.increase(el.getObjectSize());
+        weight.decrease(old.getSize());
+        weight.increase(el.getSize());
         return old.get();
     }
 
     @Override
     public void add(int index, E element) {
-        SmartListElement<E> el = _decisionTree.processObject(element);
+        ListElement<E> el = _decisionTree.processObject(element);
         _list.add(index, el);
         _serializationQueue.add(el);
-        weight.increase(el.getObjectSize());
+        weight.increase(el.getSize());
     }
 
     @Override
     public E remove(int index) {
-        SmartListElement<E> el = _list.remove(index);
+        ListElement<E> el = _list.remove(index);
         E obj = el.get();
         _serializationQueue.remove(el);
-        weight.decrease(el.getObjectSize());
-        try { el.release(); } catch(IOException ioe) {}
+        weight.decrease(el.getSize());
+
         return obj;
     }
 
@@ -214,7 +214,7 @@ public class SmartList<E> implements List<E> {
         int size = size();
         int hc = o.hashCode();
         for(int i = 0; i < size; ++i) {
-            if(_list.get(i).hashcode == hc)
+            if(_list.get(i).getHashCode() == hc)
                 return i;
         }
 
@@ -237,7 +237,7 @@ public class SmartList<E> implements List<E> {
         int hc = o.hashCode();
 
         for(int i = size() - 1; i >= 0; --i) {
-            if(_list.get(i).hashcode == hc)
+            if(_list.get(i).getHashCode() == hc)
                 return i;
         }
 
@@ -278,7 +278,7 @@ public class SmartList<E> implements List<E> {
     @Override
     public boolean contains(Object o) {
 
-        for(SmartListElement<E> sle : _list) {
+        for(ListElement<E> sle : _list) {
             if(sle.get().equals(o))
                 return true;
         }
@@ -288,8 +288,8 @@ public class SmartList<E> implements List<E> {
 
     public boolean containsByHashCode(Object o) {
         long hc = o.hashCode();
-        for(SmartListElement<E> sle : _list) {
-            if(sle.hashcode == hc)
+        for(ListElement<E> sle : _list) {
+            if(sle.getHashCode() == hc)
                 return true;
         }
         return false;
@@ -302,20 +302,20 @@ public class SmartList<E> implements List<E> {
      */
     @Override
     public E get(int index) {
-        SmartListElement<E> sle = _list.get(index);
+        ListElement<E> sle = _list.get(index);
         E obj = sle.get();
-        int useCount = sle.useCount;
+        int useCount = sle.getUseCount();
         sle = _decisionTree.processObject(obj);
-        sle.useCount = useCount;
+        sle.setUseCount(useCount);
         _list.set(index, sle);
         return obj;
     }
 
     @Override
     public boolean add(E e) {
-        SmartListElement<E> element = _decisionTree.processObject(e);
+        ListElement<E> element = _decisionTree.processObject(e);
         boolean ret =  _list.add(element) && _serializationQueue.add(element);
-        weight.increase(element.getObjectSize());
+        weight.increase(element.getSize());
         return ret;
     }
 
@@ -324,14 +324,14 @@ public class SmartList<E> implements List<E> {
         long releasedBytes = 0;
         long tmp;
         for(int i = 0; i < numOfElements; ++i) {
-            SmartListElement<E> sle = _serializationQueue.poll();
+            ListElement<E> sle = _serializationQueue.poll();
             if(sle == null) continue;
             int index = _list.indexOf(sle);
-            tmp = sle.getObjectSize();
+            tmp = sle.getSize();
             sle = _decisionTree.demote(sle);
             if(sle == null)
                 continue;
-            releasedBytes += Math.abs(tmp - sle.getObjectSize());
+            releasedBytes += Math.abs(tmp - sle.getSize());
             _list.set(index, sle);
             _serializationQueue.add(sle);
         }

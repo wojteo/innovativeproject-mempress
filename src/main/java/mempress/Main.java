@@ -6,9 +6,5 @@ public class Main {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	public static String tukTuk() {
-		return "I'm rickshaw";
-	}
 
 }

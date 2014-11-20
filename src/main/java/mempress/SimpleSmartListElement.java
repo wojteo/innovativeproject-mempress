@@ -4,6 +4,7 @@ package mempress;
  * Ta klasa przechowuje zwykły niezmodyfikowany element
  * @param <E>
  */
+@Deprecated
 public class SimpleSmartListElement<E> extends SmartListElement<E> {
     private final E element;
 

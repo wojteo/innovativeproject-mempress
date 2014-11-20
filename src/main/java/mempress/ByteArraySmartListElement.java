@@ -7,6 +7,7 @@ import java.io.ObjectInputStream;
 /**
  * Created by bartek on 2014-11-13.
  */
+@Deprecated
 public class ByteArraySmartListElement<E> extends SmartListElement<E> {
 	protected byte[] serialized;
 	protected Class<E> objType;

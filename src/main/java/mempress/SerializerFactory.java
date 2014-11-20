@@ -31,7 +31,7 @@ public class SerializerFactory {
 				}
 			});
 
-	public Serializer createSerializer(SerializerType st) {
+	public static Serializer createSerializer(SerializerType st) {
 		SerializerFac factory = factoryMap.get(st);
 		if (factory == null) {
 			throw new MempressException(
