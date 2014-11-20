@@ -7,13 +7,11 @@ public class ClassData {
     private final SerializerType serializerType;
     private final Object data;
     private final long size;
-    private final long hashCode;
 
-    public ClassData(SerializerType serializerType, Object data, long size, long hashCode) {
+    public ClassData(SerializerType serializerType, Object data, long size) {
         this.serializerType = serializerType;
         this.data = data;
         this.size = size;
-        this.hashCode = hashCode;
     }
 
     public SerializerType getSerializerType() {
@@ -28,7 +26,4 @@ public class ClassData {
         return size;
     }
 
-    public long getHashCode() {
-        return hashCode;
-    }
 }
