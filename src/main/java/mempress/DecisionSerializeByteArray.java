@@ -14,8 +14,16 @@ public class DecisionSerializeByteArray<E> implements DecisionTreeElement<E> {
 
 	@Override
 	public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		long hash = obj.hashCode();
+		Class<E> objType; //TO-DO
+
+		Serializer ser = SerializerFactory.createSerializer(SerializerType.ByteArraySerializer);
+		ClassData cd = ser.ser(obj);
+		
+		ListElement<E> le = new SerializedListElement<E>(cd, hash, objType);
+		
+		return le;
 	}
 
 	@Override
