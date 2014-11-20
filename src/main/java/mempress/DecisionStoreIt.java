@@ -12,15 +12,14 @@ public class DecisionStoreIt<E> implements DecisionTreeElement<E> {
 
 	@Override
 	public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
-		Class<E> objectType = null;
-		
-		//TO-DO
-		long size = 0;
-		long hashcode = obj.hashCode();
+
+		long hash = obj.hashCode();
+		Class<E> objType; //TO-DO
+		long size; //TO-DO
 		
 		ClassData cd = new ClassData(SerializerType.NoSerialized, obj, size);
 		
-		ListElement<E> elem = new WrappedListElement<E>(cd, hashcode, objectType);
+		ListElement<E> elem = new WrappedListElement<E>(cd, hash, objectType);
 		return elem;
 	}
 

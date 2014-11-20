@@ -1,17 +1,11 @@
 package mempress;
 
+import java.io.File;
+
 import mempress.DecisionTree.DecisionTreeElement;
 import mempress.DecisionTree.ObjectDataCarrier;
 
 public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-	}
 
 	@Override
 	public boolean checkConditions(E obj, ObjectDataCarrier metadata) {
@@ -22,8 +16,16 @@ public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
 
 	@Override
 	public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		long hash = obj.hashCode();
+		Class<E> objType; //TO-DO
+
+		Serializer ser = SerializerFactory.createSerializer(SerializerType.FileSerializer);
+		ClassData cd = ser.ser(obj);
+		
+		ListElement<E> le = new SerializedListElement<E>(cd, hash, objType);
+		
+		return le;
 	}
 
 	@Override
