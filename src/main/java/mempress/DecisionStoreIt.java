@@ -17,7 +17,8 @@ public class DecisionStoreIt<E> implements DecisionTreeElement<E> {
 		Class<E> objType; //TO-DO
 		long size; //TO-DO
 		
-		ClassData cd = new ClassData(SerializerType.NoSerialized, obj, size);
+		Serializer pser = SerializerFactory.createSerializer(SerializerType.NoSerialized);
+		ClassData cd = pser.ser(obj);
 		
 		ListElement<E> elem = new WrappedListElement<E>(cd, hash, objectType);
 		return elem;

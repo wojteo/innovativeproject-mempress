@@ -22,6 +22,12 @@ public class SerializerFactory {
 									return new ByteArraySerializer();
 								}
 							});
+					put(SerializerType.NoSerialized,
+							new SerializerFac() {
+								public Serializer create() {
+									return new PseudoSerializer();
+								}
+							});
 					put(SerializerType.FileSerializer, 
 							new SerializerFac() {
 								public Serializer create() {
