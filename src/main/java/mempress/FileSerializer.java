@@ -28,7 +28,7 @@ public class FileSerializer implements Serializer {
 			tFile.deleteOnExit();
 
 			ClassData cd = new ClassData(SerializerType.FileSerializer, tFile,
-					tFile.length());
+					0);
 
 			return cd;
 		} catch (IOException e) {

@@ -43,7 +43,7 @@ public class DecisionTree<E> {
         ObjectDataCarrier metadata = new ObjectDataCarrier();
 
 
-        for(int i = 0; i < s; ++i) {
+        for(int i = startPoint; i < s; ++i) {
             DecisionTreeElement<E> dte = processors.get(i);
             if(dte.checkConditions(obj, metadata)) {
                 tmp = dte.processObject(obj, metadata);
@@ -77,6 +77,7 @@ public class DecisionTree<E> {
             else {
                 tmp = processObject(obj, i);
                 ListElement.assign(wrappedObj, tmp);
+                return wrappedObj;
             }
         }
 

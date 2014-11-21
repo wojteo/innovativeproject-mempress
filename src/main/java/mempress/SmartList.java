@@ -13,7 +13,8 @@ import java.util.stream.Collectors;
  * @param <E>
  */
 public class SmartList<E> implements List<E> {
-    private List<ListElement<E>> _list;
+    //private List<ListElement<E>> _list;
+    protected List<ListElement<E>> _list;
     private DecisionTree<E> _decisionTree;
     private PriorityQueue<ListElement<E>> _serializationQueue;
     private ListWeightListener weight;
@@ -358,7 +359,7 @@ public class SmartList<E> implements List<E> {
         }
 
         public void increase(long val) {
-            Preconditions.checkArgument(val > 0);
+            Preconditions.checkArgument(val >= 0);
             currentWeight += val;
 
             if(currentWeight > weightLimit)
@@ -366,7 +367,7 @@ public class SmartList<E> implements List<E> {
         }
 
         public void decrease(long val) {
-            Preconditions.checkArgument(val > 0);
+            Preconditions.checkArgument(val >= 0);
             currentWeight -= val;
             if(currentWeight < 0)
                 currentWeight = 0;
@@ -380,6 +381,7 @@ public class SmartList<E> implements List<E> {
             int attemptLeft = _list.size();
             while (currentWeight > weightLimit && attemptLeft > 0) {
                 tmp = demoteElements(1);
+                System.out.println("tmp: " + tmp);
                 currentWeight -= tmp;
                 --attemptLeft;
             }

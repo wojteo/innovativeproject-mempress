@@ -10,6 +10,8 @@ public class WrappedListElement<E> extends ListElement<E> {
 
     @Override
     protected E getObject() {
-        return objectType.cast(data.getData());
+        return objectType.cast(SerializerFactory
+                .createSerializer(getData().getSerializerType())
+                .des(data));
     }
 }

@@ -15,17 +15,17 @@ import java.util.Random;
 public class SmartListArrayListCompareTest {
     @Test
     public void testAddInsertObject() {
-        Provider<Object> objProvider = new ObjectProvider(200),
+        Provider<Integer> objProvider = new ObjectProvider(200),
                 objProvider2 = new ObjectProvider(200);
-        List<Object> testedArrayList = new ArrayList<Object>(),
-                testedSmartList = new SmartList<Object>();
+        List<Integer> testedArrayList = new ArrayList<>(),
+                testedSmartList = new SmartList<>();
 
         ListTester.TestResults results =
-                ListTester.<Object>testCollection(testedArrayList, objProvider, commandAddInsert);
+                ListTester.testCollection(testedArrayList, objProvider, commandAddInsert);
         ListTester.TestResults results2 =
-                ListTester.<Object>testCollection(testedSmartList, objProvider2, commandAddInsert);
+                ListTester.testCollection(testedSmartList, objProvider2, commandAddInsert);
 
-        System.out.println("\nWyniki testu AddInsert dla ArrayList i SmartList wypełniane obiektami Object: \n");
+        System.out.println("\nWyniki testu AddInsert dla ArrayList i SmartList wypełniane obiektami Integer: \n");
         System.out.println("ArrayList:");
         System.out.println(results);
         System.out.println("SmartList:");
@@ -34,17 +34,55 @@ public class SmartListArrayListCompareTest {
 
     @Test
     public void testAddInsertRemoveObject() {
-        Provider<Object> objProvider = new ObjectProvider(200),
-                objProvider2 = new ObjectProvider(200);
-        List<Object> testedArrayList = new ArrayList<Object>(),
-                testedSmartList = new SmartList<Object>();
+        int len = commandAddInsertRemove.length();
+        Provider<Integer> objProvider = new ObjectProvider(len),
+                objProvider2 = new ObjectProvider(len);
+        List<Integer> testedArrayList = new ArrayList<>();
+        DecisionTree<Integer> dt = new DecisionTree<Integer>() {
+            {
+                processors.add(new DecisionStoreIt<>());
+                processors.add(new DecisionSerializeByteArray<>());
+                processors.add(new DecisionSerializeFile<>());
+            }
+
+            @Override
+            public ListElement<Integer> demote(ListElement<Integer> wrappedObj) {
+                long oldSize = wrappedObj.getSize(), newSize;
+                System.out.print("Demote from " + wrappedObj.getData().getSerializerType() + " to ");
+                super.demote(wrappedObj);
+                System.out.println(wrappedObj.getData().getSerializerType());
+                newSize = wrappedObj.getSize();
+                System.out.println(oldSize + "b -> " + newSize);
+                return wrappedObj;
+
+            }
+        };
+        List<Integer> testedSmartList = new SmartList<Integer>(dt, len * 2) {
+            @Override
+            protected long demoteElements(int numOfElements) {
+                System.out.println("demoteElements called, maxWeight: " + getMaximumWeight() + ", currentWeight: " + getCurrentWeight());
+                return super.demoteElements(numOfElements);
+            }
+
+            @Override
+            public boolean add(Integer integer) {
+                System.out.println("Before addition; maxWeight: " + getMaximumWeight() + ", currentWeight: " + getCurrentWeight());
+                return super.add(integer);
+            }
+
+            @Override
+            public void add(int index, Integer element) {
+                System.out.println("Before addition; maxWeight: " + getMaximumWeight() + ", currentWeight: " + getCurrentWeight());
+                super.add(index, element);
+            }
+        };
 
         ListTester.TestResults results =
-                ListTester.<Object>testCollection(testedArrayList, objProvider, commandAddInsertRemove);
+                ListTester.testCollection(testedArrayList, objProvider, commandAddInsertRemove);
         ListTester.TestResults results2 =
-                ListTester.<Object>testCollection(testedSmartList, objProvider2, commandAddInsertRemove);
+                ListTester.testCollection(testedSmartList, objProvider2, commandAddInsertRemove);
 
-        System.out.println("\nWyniki testu AddInsertRemove dla ArrayList i SmartList wypełniane obiektami Object: \n");
+        System.out.println("\nWyniki testu AddInsertRemove dla ArrayList i SmartList wypełniane obiektami Integer: \n");
         System.out.println("ArrayList:");
         System.out.println(results);
         System.out.println("SmartList:");
@@ -72,21 +110,108 @@ public class SmartListArrayListCompareTest {
 
     @Test
     public void testAddInsertRemoveDataProvider() {
-        Provider<DataProvider> objProvider = new DataProviderProvider(ListTester.RANDOM_FACTOR, 200),
-                objProvider2 = new DataProviderProvider(ListTester.RANDOM_FACTOR, 200);
+        Provider<DataProvider> objProvider = new DataProviderProvider(ListTester.RANDOM_FACTOR, 200+200),
+                objProvider2 = new DataProviderProvider(ListTester.RANDOM_FACTOR, 200+200);
         List<DataProvider> testedArrayList = new ArrayList<DataProvider>(),
                 testedSmartList = new SmartList<DataProvider>();
 
         ListTester.TestResults results =
-                ListTester.testCollection(testedArrayList, objProvider, commandAddInsertRemove);
+                ListTester.testCollection(testedArrayList, objProvider, commandAddInsertRemove+commandAddInsertRemove);
         ListTester.TestResults results2 =
-                ListTester.testCollection(testedSmartList, objProvider2, commandAddInsertRemove);
+                ListTester.testCollection(testedSmartList, objProvider2, commandAddInsertRemove+commandAddInsertRemove);
 
         System.out.println("\nWyniki testu AddInsertRemove dla ArrayList i SmartList wypełniane obiektami DataProvider: \n");
         System.out.println("ArrayList:");
         System.out.println(results);
         System.out.println("SmartList:");
         System.out.println(results2);
+    }
+
+    @Test
+    public void testAddInsertRemoveDataProviderLimitedSize() {
+        Provider<DataProvider> objProvider = new DataProviderProvider(ListTester.RANDOM_FACTOR, 200+200),
+                objProvider2 = new DataProviderProvider(ListTester.RANDOM_FACTOR, 200+200);
+        List<DataProvider> testedArrayList = new ArrayList<DataProvider>();
+        DecisionTree<DataProvider> dt = new DecisionTree<DataProvider>() {
+            {
+                processors.add(new DecisionStoreIt<>());
+                processors.add(new DecisionSerializeByteArray<>());
+                processors.add(new DecisionSerializeFile<>());
+            }
+
+            @Override
+            public ListElement<DataProvider> demote(ListElement<DataProvider> wrappedObj) {
+                long oldSize = wrappedObj.getSize(), newSize;
+                System.out.print("[DP]Demote from " + wrappedObj.getData().getSerializerType() + " to ");
+                super.demote(wrappedObj);
+                System.out.println(wrappedObj.getData().getSerializerType());
+                newSize = wrappedObj.getSize();
+                System.out.println(oldSize + "b -> " + newSize);
+                return wrappedObj;
+
+            }
+        };
+        SmartList<DataProvider> testedSmartList = new SmartList<DataProvider>(dt, 10240) {
+            @Override
+            protected long demoteElements(int numOfElements) {
+                System.out.println("[DP]demoteElements called, maxWeight: " + getMaximumWeight() + ", currentWeight: " + getCurrentWeight());
+                return super.demoteElements(numOfElements);
+            }
+
+            @Override
+            public boolean add(DataProvider dataProvider) {
+                System.out.println("[DP]Before addition; maxWeight: " + getMaximumWeight() + ", currentWeight: " + getCurrentWeight());
+                return super.add(dataProvider);
+            }
+
+            @Override
+            public void add(int index, DataProvider element) {
+                System.out.println("[DP]Before addition; maxWeight: " + getMaximumWeight() + ", currentWeight: " + getCurrentWeight());
+                super.add(index, element);
+            }
+
+            @Override
+            public void clear() {
+                int wrapped, barr, serf, oth;
+                wrapped = barr = serf = oth = 0;
+
+                for(ListElement<DataProvider> le: _list) {
+                    switch (le.getData().getSerializerType())
+                    {
+                        case NoSerialized:
+                            ++wrapped;
+                            break;
+                        case ByteArraySerializer:
+                            ++barr;
+                            break;
+                        case FileSerializer:
+                            ++serf;
+                            break;
+                        default:
+                            ++oth;
+                            break;
+                    }
+                }
+
+                System.out.println(String.format("List elements types in SmartList:\n\tWrapped w-out serialization object: %d\n\tSerialized to byte array: %d\n\tSerialized to file: %d\n\tOther: %d\n",
+                        wrapped, barr, serf, oth));
+
+                super.clear();
+            }
+        };
+
+        ListTester.TestResults results =
+                ListTester.testCollection(testedArrayList, objProvider, commandAddInsertRemove+commandAddInsertRemove);
+        ListTester.TestResults results2 =
+                ListTester.testCollection(testedSmartList, objProvider2, commandAddInsertRemove+commandAddInsertRemove);
+
+        System.out.println(String.format("\nWyniki testu AddInsertRemove dla ArrayList i SmartList wypełniane obiektami DataProvider, dla SmartList o ograniczonej pojemnosci (%d b): \n",
+                testedSmartList.getMaximumWeight()));
+        System.out.println("ArrayList:");
+        System.out.println(results);
+        System.out.println("SmartList:");
+        System.out.println(results2);
+        testedSmartList.clear();
     }
 
     private static class DataProviderProvider implements Provider<DataProvider> {
@@ -116,7 +241,7 @@ public class SmartListArrayListCompareTest {
 
     }
 
-    private static class ObjectProvider implements Provider<Object> {
+    private static class ObjectProvider implements Provider<Integer> {
         private int counter = 0;
         private int limit = 1;
         private Integer[] data;
@@ -129,7 +254,7 @@ public class SmartListArrayListCompareTest {
         }
 
         @Override
-        public Object getNext(Object arg) {
+        public Integer getNext(Object arg) {
             // TODO Auto-generated method stub
             return data[counter++ % limit];
         }
