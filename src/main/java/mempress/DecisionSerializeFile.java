@@ -18,7 +18,7 @@ public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
 	public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
 		
 		long hash = obj.hashCode();
-		Class<E> objType; //TO-DO
+		Class<E> objType = (Class<E>)obj.getClass();
 
 		Serializer ser = SerializerFactory.createSerializer(SerializerType.FileSerializer);
 		ClassData cd = ser.ser(obj);

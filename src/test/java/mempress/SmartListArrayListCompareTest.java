@@ -11,8 +11,8 @@ import java.util.Random;
 /**
  * Created by bartek on 2014-11-13.
  */
-public class SmartListArrayListCompareTest {
 
+public class SmartListArrayListCompareTest {
     @Test
     public void testAddInsertObject() {
         Provider<Object> objProvider = new ObjectProvider(200),
@@ -91,7 +91,7 @@ public class SmartListArrayListCompareTest {
 
     private static class DataProviderProvider implements Provider<DataProvider> {
         private DataProvider.ObjectSize[] sizeList =
-                DataProvider.ObjectSize.values();
+                new DataProvider.ObjectSize[] { DataProvider.ObjectSize.SMALL, DataProvider.ObjectSize.MEDIUM, DataProvider.ObjectSize.BIG };
         private Random random;
         private int numOfElements = 1;
         private DataProvider[] data;
@@ -119,13 +119,13 @@ public class SmartListArrayListCompareTest {
     private static class ObjectProvider implements Provider<Object> {
         private int counter = 0;
         private int limit = 1;
-        private Object[] data;
+        private Integer[] data;
 
         public ObjectProvider(int limit) {
             this.limit = limit;
-            data = new Object[limit];
+            data = new Integer[limit];
             for(int i = 0; i < limit; ++i)
-                data[i] = new Object();
+                data[i] = new Integer(i);
         }
 
         @Override
@@ -138,4 +138,5 @@ public class SmartListArrayListCompareTest {
 
     private static String commandAddInsertRemove = "aaaaaaaaaaaaaaaariiiaiiaiiaiirarairariraaarariiriirrraairrraiarriaaaiiaaaiirirairiiiirairaraiarrriiriiraaraarrrrirraiaaaaaiirrraiiarararairaaariararrraiairrairiiiiriiaiarairairriraaiaaaiaiiraraiaarrri";
     private static String commandAddInsert = "aaiiiaiaiaiiaaaiaaaaiaiaaiiiiaiaiiiaaaiiaaaaiaaaiaaaaaiiaaiiaaiaaaaiaaiaaiiaiaiiiaiiaiaaiaiiiaiiiaaaaaiaaaiaaiaiaiiiaaaaaaiaiaiaiaiiiiiiiiaiaaiaiiaaiaaiiiiiaiiaaaiaiaiaiiiiiaaiiiaaiiaiiiaiiaiiiiaaiaii";
+
 }

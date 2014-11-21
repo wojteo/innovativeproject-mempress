@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 /**
  * Created by Bartek on 2014-11-20.
  */
-public abstract class ListElement<E> {
+public abstract class ListElement<E> implements Comparable<ListElement<E>> {
     protected ClassData data;
     private long hashcode;
     protected Class<E> objectType;
@@ -49,6 +49,16 @@ public abstract class ListElement<E> {
 
     public void setUseCount(int useCount) {
         this.useCount = useCount;
+    }
+
+    @Override
+    public int compareTo(ListElement<E> o) {
+        int ret = Integer.compare(getUseCount(), o.getUseCount());
+
+        if(ret == 0)
+            ret = -Long.compare(getSize(), o.getSize());
+
+        return ret;
     }
 
     public static <E> void assign(ListElement<E> target, ListElement<E> source) {

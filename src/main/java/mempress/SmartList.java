@@ -20,12 +20,18 @@ public class SmartList<E> implements List<E> {
 
     public SmartList() {
         this(Long.MAX_VALUE);
+        _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
     }
 
     public SmartList(long maxWeight) {
-        _list = new SmartList<>();
+        _list = new ArrayList<>();
         _serializationQueue = new PriorityQueue<>();
         weight = new ListWeightListener(maxWeight);
+    }
+
+    public SmartList(DecisionTree<E> decTree, long maxWeight) {
+        this(maxWeight);
+        _decisionTree = decTree;
     }
 
     @Override
@@ -303,21 +309,23 @@ public class SmartList<E> implements List<E> {
     @Override
     public E get(int index) {
         ListElement<E> sle = _list.get(index);
+        _decisionTree.goBackToHighestState(sle);
         E obj = sle.get();
-        int useCount = sle.getUseCount();
-        sle = _decisionTree.processObject(obj);
-        sle.setUseCount(useCount);
-        _list.set(index, sle);
         return obj;
     }
 
     @Override
     public boolean add(E e) {
         ListElement<E> element = _decisionTree.processObject(e);
+        if(element == null) return false;
         boolean ret =  _list.add(element) && _serializationQueue.add(element);
         weight.increase(element.getSize());
         return ret;
     }
+
+    public long getMaximumWeight() { return weight.weightLimit; }
+
+    public long getCurrentWeight() { return weight.currentWeight; }
 
     // TODO: Dokończyć pisanie
     protected long demoteElements(int numOfElements) {

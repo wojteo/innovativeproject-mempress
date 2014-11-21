@@ -14,13 +14,12 @@ public class DecisionStoreIt<E> implements DecisionTreeElement<E> {
 	public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
 
 		long hash = obj.hashCode();
-		Class<E> objType; //TO-DO
-		long size; //TO-DO
+		Class<E> objType = (Class<E>)obj.getClass();
 		
 		Serializer pser = SerializerFactory.createSerializer(SerializerType.NoSerialized);
 		ClassData cd = pser.ser(obj);
 		
-		ListElement<E> elem = new WrappedListElement<E>(cd, hash, objectType);
+		ListElement<E> elem = new WrappedListElement<E>(cd, hash, objType);
 		return elem;
 	}
 

@@ -83,6 +83,19 @@ public class DecisionTree<E> {
         throw new MempressException("Can't demote object");
     }
 
+    public ListElement<E> goBackToHighestState(ListElement<E> wrappedObj) {
+        Preconditions.checkNotNull(wrappedObj);
+
+        E obj = wrappedObj.get();
+        int uc = wrappedObj.getUseCount();
+
+        ListElement<E> firstStateElem = processObject(obj);
+        firstStateElem.setUseCount(uc);
+        ListElement.assign(wrappedObj, firstStateElem);
+
+        return wrappedObj;
+    }
+
     public interface DecisionTreeElement<E> {
         public boolean checkConditions(E obj, ObjectDataCarrier metadata);
         public ListElement<E> processObject(E obj, ObjectDataCarrier metadata);

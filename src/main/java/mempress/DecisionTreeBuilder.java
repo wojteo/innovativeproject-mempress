@@ -15,9 +15,9 @@ public class DecisionTreeBuilder<E> {
     // TODO: dodać klasy w podanej kolejności: zwykły wrapper, serializer do pamięci, serializer do pliku
     public static <E> DecisionTree<E> buildDefaultTree() {
         return DecisionTreeBuilder.<E>create()
-                .addTreeElement(null)
-                .addTreeElement(null)
-                .addTreeElement(null)
+                .addTreeElement(new DecisionStoreIt<E>())
+                .addTreeElement(new DecisionSerializeByteArray<E>())
+                .addTreeElement(new DecisionSerializeFile<E>())
                 .build();
     }
 
