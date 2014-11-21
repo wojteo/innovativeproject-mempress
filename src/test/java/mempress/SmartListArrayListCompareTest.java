@@ -1,12 +1,16 @@
 package mempress;
 
+import com.google.common.base.Stopwatch;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by bartek on 2014-11-13.
@@ -213,6 +217,33 @@ public class SmartListArrayListCompareTest {
         System.out.println("SmartList:");
         System.out.println(results2);
         testedSmartList.clear();
+    }
+
+    @Test
+    public void factorialTest() {
+        Integer[] c = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
+        List<Integer> coefficients = Arrays.asList(c);
+        List<Integer> list1 = new ArrayList<>();
+        List<Integer> list2 = new SmartList<>(1);
+
+        Assert.assertTrue(list1.addAll(coefficients));
+        Assert.assertTrue(list2.addAll(coefficients));
+
+        int factorial1 = 1, factorial2 = 1;
+        long time1, time2;
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        for(int i = 0; i < 10; ++i) {
+            factorial1 *= list1.get(i);
+        }
+        time1 = stopwatch.elapsed(TimeUnit.NANOSECONDS);
+        stopwatch = Stopwatch.createStarted();
+        for(int i = 0; i < 10; ++i) {
+            factorial2 *= list2.get(i);
+        }
+        time2 = stopwatch.elapsed(TimeUnit.NANOSECONDS);
+
+        System.out.println("ArrayList: 10! = " + factorial1 + "in " + time1 + "ns");
+        System.out.println("SmartList: 10! = " + factorial2 + "in " + time2 + "ns");
     }
 
     private static class DataProviderProvider implements Provider<DataProvider> {

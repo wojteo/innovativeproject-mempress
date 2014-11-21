@@ -28,6 +28,7 @@ public class SmartList<E> implements List<E> {
         _list = new ArrayList<>();
         _serializationQueue = new PriorityQueue<>();
         weight = new ListWeightListener(maxWeight);
+        _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
     }
 
     public SmartList(DecisionTree<E> decTree, long maxWeight) {
