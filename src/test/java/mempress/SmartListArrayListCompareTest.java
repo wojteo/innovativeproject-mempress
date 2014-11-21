@@ -15,15 +15,16 @@ import java.util.Random;
 public class SmartListArrayListCompareTest {
     @Test
     public void testAddInsertObject() {
-        Provider<Integer> objProvider = new ObjectProvider(200),
-                objProvider2 = new ObjectProvider(200);
+        int len = ArrayListLongTest.commandAddInsert.length();
+        Provider<Integer> objProvider = new ObjectProvider(len),
+                objProvider2 = new ObjectProvider(len);
         List<Integer> testedArrayList = new ArrayList<>(),
                 testedSmartList = new SmartList<>();
 
         ListTester.TestResults results =
-                ListTester.testCollection(testedArrayList, objProvider, commandAddInsert);
+                ListTester.testCollection(testedArrayList, objProvider, ArrayListLongTest.commandAddInsert);
         ListTester.TestResults results2 =
-                ListTester.testCollection(testedSmartList, objProvider2, commandAddInsert);
+                ListTester.testCollection(testedSmartList, objProvider2, ArrayListLongTest.commandAddInsert);
 
         System.out.println("\nWyniki testu AddInsert dla ArrayList i SmartList wypełniane obiektami Integer: \n");
         System.out.println("ArrayList:");

@@ -46,9 +46,11 @@ public class DecisionTree<E> {
         for(int i = startPoint; i < s; ++i) {
             DecisionTreeElement<E> dte = processors.get(i);
             if(dte.checkConditions(obj, metadata)) {
-                tmp = dte.processObject(obj, metadata);
-                if(tmp != null)
-                    return tmp;
+                try {
+                    tmp = dte.processObject(obj, metadata);
+                    if (tmp != null)
+                        return tmp;
+                } catch(OutOfMemoryError oom) { }
             }
         }
 
