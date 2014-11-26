@@ -1,9 +1,6 @@
 package mempress;
 
 import com.google.common.base.Preconditions;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 
 import java.util.*;
 
@@ -11,47 +8,28 @@ import java.util.*;
  * Klasa listy; DO NAPISANIA
  * @param <E>
  */
-public class SmartList<E> implements List<E> {
+public class SimpleSmartList<E> implements List<E> {
     //private List<ListElement<E>> _list;
     protected List<ListElement<E>> _list;
     private DecisionTree<E> _decisionTree;
     private PriorityQueue<ListElement<E>> _serializationQueue;
-    //private ListWeightListener weight;
-    private long weightLimit = -1;
-    private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
-    private Timer cycleTimer;
+    private ListWeightListener weight;
 
-    public SmartList() {
+    public SimpleSmartList() {
         this(Long.MAX_VALUE);
         _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
     }
 
-    public SmartList(long maxWeight) {
+    public SimpleSmartList(long maxWeight) {
         _list = new ArrayList<>();
         _serializationQueue = new PriorityQueue<>();
-        //weight = new ListWeightListener(maxWeight);
-        weightLimit = maxWeight;
+        weight = new ListWeightListener(maxWeight);
         _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
     }
 
-    public SmartList(DecisionTree<E> decTree, long maxWeight) {
+    public SimpleSmartList(DecisionTree<E> decTree, long maxWeight) {
         this(maxWeight);
         _decisionTree = decTree;
-    }
-
-    protected SmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
-        Preconditions.checkNotNull(decTree);
-
-        _decisionTree = decTree;
-
-        if(maxWeight > 0) {
-            weightLimit = maxWeight;
-            currentWeight.addListener(new WeightLimitListener());
-        }
-
-        if(timeLimit > 0) {
-            // TODO: timer do cyklicznego sprawdzania elementów listy
-        }
     }
 
     @Override
@@ -99,7 +77,7 @@ public class SmartList<E> implements List<E> {
 
 
         for(ListElement<E> sle : _list) {
-            Object obj = sle.get(false);
+            Object obj = sle.get();
             if(obj == null)
                 continue;
             for(Object o : c) {
@@ -117,10 +95,9 @@ public class SmartList<E> implements List<E> {
         ListElement<E> sle;
         boolean b = true;
         for(E e : c) {
-            sle = wrapToListElement(e);
+            sle = _decisionTree.processObject(e);
             b = b && _list.add(sle) && _serializationQueue.add(sle);
-            //weight.increase(sle.getSize());
-            currentWeight.add(sle.getSize());
+            weight.increase(sle.getSize());
         }
 
         return b;
@@ -180,23 +157,20 @@ public class SmartList<E> implements List<E> {
     @Override
     public E set(int index, E element) {
         Preconditions.checkNotNull(element);
-        ListElement<E> el = wrapToListElement(element),
+        ListElement<E> el = _decisionTree.processObject(element),
                 old = _list.set(index, el);
         _serializationQueue.remove(old);
-        //weight.decrease(old.getSize());
-        //weight.increase(el.getSize());
-        currentWeight.subtract(old.getSize());
-        currentWeight.add(el.getSize());
+        weight.decrease(old.getSize());
+        weight.increase(el.getSize());
         return old.get();
     }
 
     @Override
     public void add(int index, E element) {
-        ListElement<E> el = wrapToListElement(element);
+        ListElement<E> el = _decisionTree.processObject(element);
         _list.add(index, el);
         _serializationQueue.add(el);
-        //weight.increase(el.getSize());
-        currentWeight.add(el.getSize());
+        weight.increase(el.getSize());
     }
 
     @Override
@@ -204,8 +178,8 @@ public class SmartList<E> implements List<E> {
         ListElement<E> el = _list.remove(index);
         E obj = el.get();
         _serializationQueue.remove(el);
-        //weight.decrease(el.getSize());
-        currentWeight.subtract(el.getSize());
+        weight.decrease(el.getSize());
+
         return obj;
     }
 
@@ -213,7 +187,8 @@ public class SmartList<E> implements List<E> {
     public int indexOf(Object o) {
         int size = size();
         for(int i = 0; i < size; ++i) {
-            if(_list.get(i).compare(o))
+            Object obj = _list.get(i).get();
+            if(obj != null && obj.equals(o))
                 return i;
         }
 
@@ -224,7 +199,8 @@ public class SmartList<E> implements List<E> {
     public int lastIndexOf(Object o) {
         Preconditions.checkNotNull(o);
         for(int i = size() - 1; i >= 0; --i) {
-            if(_list.get(i).compare(o))
+            Object obj = _list.get(i).get();
+            if(obj != null && obj.equals(o))
                 return i;
         }
 
@@ -266,7 +242,7 @@ public class SmartList<E> implements List<E> {
     public boolean contains(Object o) {
 
         for(ListElement<E> sle : _list) {
-            if(sle.compare(o))
+            if(sle.get().equals(o))
                 return true;
         }
 
@@ -288,17 +264,16 @@ public class SmartList<E> implements List<E> {
 
     @Override
     public boolean add(E e) {
-        ListElement<E> element = wrapToListElement(e);
+        ListElement<E> element = _decisionTree.processObject(e);
         if(element == null) return false;
         boolean ret =  _list.add(element) && _serializationQueue.add(element);
-        //weight.increase(element.getSize());
-        currentWeight.add(element.getSize());
+        weight.increase(element.getSize());
         return ret;
     }
 
-    public long getMaximumWeight() { return weightLimit; }
+    public long getMaximumWeight() { return weight.weightLimit; }
 
-    public long getCurrentWeight() { return currentWeight.get(); }
+    public long getCurrentWeight() { return weight.currentWeight; }
 
     // TODO: Dokończyć pisanie
     protected long demoteElements(int numOfElements) {
@@ -318,17 +293,6 @@ public class SmartList<E> implements List<E> {
         }
 
         return releasedBytes;
-    }
-
-    /**
-     * Ta metoda TYLKO dostarcza element do dodania. Dodawanie do listy nie może się tutaj znaleźć
-     * @param obj
-     * @return
-     */
-    protected ListElement<E> wrapToListElement(E obj) {
-        Preconditions.checkNotNull(obj);
-
-        return _decisionTree.processObject(obj);
     }
 
 
@@ -370,26 +334,5 @@ public class SmartList<E> implements List<E> {
             }
         }
 
-    }
-
-    private class WeightLimitListener implements ChangeListener<Number> {
-        @Override
-        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-            long l = newValue.longValue();
-
-            if(l > weightLimit)
-                tryToShrink(l);
-        }
-
-        private void tryToShrink(long newVal) {
-            long tmp;
-            int attemptLeft = _list.size();
-            while (newVal > weightLimit && attemptLeft > 0) {
-                tmp = demoteElements(1);
-                //System.out.println("tmp: " + tmp);
-                currentWeight.subtract(newVal);
-                --attemptLeft;
-            }
-        }
     }
 }

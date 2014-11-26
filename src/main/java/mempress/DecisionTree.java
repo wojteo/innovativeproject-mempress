@@ -78,7 +78,7 @@ public class DecisionTree<E> {
             }
             else {
                 tmp = processObject(obj, i);
-                ListElement.assign(wrappedObj, tmp);
+                wrappedObj.assign(tmp);
                 return wrappedObj;
             }
         }
@@ -94,7 +94,7 @@ public class DecisionTree<E> {
 
         ListElement<E> firstStateElem = processObject(obj);
         firstStateElem.setUseCount(uc);
-        ListElement.assign(wrappedObj, firstStateElem);
+        wrappedObj.assign(firstStateElem);
 
         return wrappedObj;
     }
