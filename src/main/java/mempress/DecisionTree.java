@@ -94,7 +94,8 @@ public class DecisionTree<E> {
 
         ListElement<E> firstStateElem = processObject(obj);
         firstStateElem.setUseCount(uc);
-        wrappedObj.assign(firstStateElem);
+        if(firstStateElem != null)
+            wrappedObj.assign(firstStateElem);
 
         return wrappedObj;
     }

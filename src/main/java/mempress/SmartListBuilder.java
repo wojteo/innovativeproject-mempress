@@ -10,6 +10,7 @@ public class SmartListBuilder<E> {
     private DecisionTree<E> _decisionTree;
     private long _weightLimit = -1;
     private long _stateTimeLimit = -1;
+    private boolean _allowNonImmutableObjects = true;
 
     public static <E> SmartListBuilder<E> create() {
         return new SmartListBuilder<E>();
@@ -42,14 +43,25 @@ public class SmartListBuilder<E> {
         return this;
     }
 
+    public SmartListBuilder<E> allowNonImmutableObjects(boolean allow) {
+        _allowNonImmutableObjects = allow;
+        return this;
+    }
+
     public SmartList<E> build() {
+        SmartList<E> tmp = null;
         if(_decisionTree == null)
             _decisionTree = DecisionTreeBuilder.buildDefaultTree();
         if(_elementsProvideHashCode) {
-            return new HashCodeSmartList<E>(_decisionTree, _weightLimit, _stateTimeLimit);
+            tmp = new HashCodeSmartList<E>(_decisionTree, _weightLimit, _stateTimeLimit);
         } else {
-            return new SmartList<E>(_decisionTree, _weightLimit, _stateTimeLimit);
+            tmp = new SmartList<E>(_decisionTree, _weightLimit, _stateTimeLimit);
         }
+
+        if(!_allowNonImmutableObjects)
+            tmp = new ImmutableDecorator<E>().decorate(tmp);
+
+        return tmp;
     }
 
 }

@@ -3,6 +3,7 @@ package mempress;
 import com.google.common.base.Preconditions;
 
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Created by Bartek on 2014-11-25.
@@ -48,6 +49,9 @@ public class HashCodeSmartList<E> extends SmartList<E> {
     @Override
     protected ListElement<E> wrapToListElement(E obj) {
         ListElement<E> le = super.wrapToListElement(obj);
-        return new ListElementWithHashCode<>(le.data, le.objectType, obj.hashCode());
+        if(le == null)
+            return null;
+        else
+            return new ListElementWithHashCode<>(le.data, le.objectType, obj.hashCode());
     }
 }
