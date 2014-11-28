@@ -1,4 +1,4 @@
-/**
+package mempress; /**
  * Created by Bartek on 2014-11-28.
  */
 import mempress.DecisionSerializeByteArray;
