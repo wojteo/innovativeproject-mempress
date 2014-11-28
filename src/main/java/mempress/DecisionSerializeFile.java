@@ -17,14 +17,14 @@ public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
 	@Override
 	public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
 		
-		long hash = obj.hashCode();
+//		long hash = obj.hashCode();
 		Class<E> objType = (Class<E>)obj.getClass();
 
 		Serializer ser = SerializerFactory.createSerializer(SerializerType.FileSerializer);
 		ClassData cd = ser.ser(obj);
 		
-		ListElement<E> le = new SerializedListElement<E>(cd, hash, objType);
-		
+//		ListElement<E> le = new SerializedListElement<E>(cd, hash, objType);
+		ListElement<E> le = new ListElement<>(cd, objType);
 		return le;
 	}
 
