@@ -1,26 +1,27 @@
 import mempress.*;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Serializable;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Created by Bartek on 2014-11-28.
  */
-public class DecisionSerializeByteArrayTest {
-    private DecisionSerializeByteArray<SerializableClass> _decision1;
-    private DecisionSerializeByteArray<NonSerializableClass> _decision2;
+public class DecisionSerializeFileTest {
+    private DecisionSerializeFile<SerializableClass> _decision1;
+    private DecisionSerializeFile<NonSerializableClass> _decision2;
     private SerializableClass _sClass;
     private NonSerializableClass _nsClass;
     private DecisionTree.ObjectDataCarrier _odc;
 
     @Before
     public void initTest() {
-        _decision1 = new DecisionSerializeByteArray<>();
-        _decision2 = new DecisionSerializeByteArray<>();
+        _decision1 = new DecisionSerializeFile<>();
+        _decision2 = new DecisionSerializeFile<>();
         _sClass = new SerializableClass();
         _nsClass = new NonSerializableClass();
         _odc = new DecisionTree.ObjectDataCarrier();
@@ -50,7 +51,7 @@ public class DecisionSerializeByteArrayTest {
 
     @Test
     public void testGetOperationType() {
-        assertTrue(_decision1.getOperationType() == SerializerType.ByteArraySerializer);
+        assertTrue(_decision1.getOperationType() == SerializerType.FileSerializer);
     }
 
     private static class SerializableClass implements Serializable {

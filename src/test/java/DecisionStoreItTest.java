@@ -1,26 +1,27 @@
 import mempress.*;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Serializable;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Created by Bartek on 2014-11-28.
  */
-public class DecisionSerializeByteArrayTest {
-    private DecisionSerializeByteArray<SerializableClass> _decision1;
-    private DecisionSerializeByteArray<NonSerializableClass> _decision2;
+public class DecisionStoreItTest {
+    private DecisionStoreIt<SerializableClass> _decision1;
+    private DecisionStoreIt<NonSerializableClass> _decision2;
     private SerializableClass _sClass;
     private NonSerializableClass _nsClass;
     private DecisionTree.ObjectDataCarrier _odc;
 
     @Before
     public void initTest() {
-        _decision1 = new DecisionSerializeByteArray<>();
-        _decision2 = new DecisionSerializeByteArray<>();
+        _decision1 = new DecisionStoreIt<>();
+        _decision2 = new DecisionStoreIt<>();
         _sClass = new SerializableClass();
         _nsClass = new NonSerializableClass();
         _odc = new DecisionTree.ObjectDataCarrier();
@@ -29,7 +30,7 @@ public class DecisionSerializeByteArrayTest {
     @Test
     public void testCheckConditions() {
         assertTrue(_decision1.checkConditions(_sClass, _odc));
-        assertFalse(_decision2.checkConditions(_nsClass, _odc));
+        assertTrue(_decision2.checkConditions(_nsClass, _odc));
     }
 
     @Test
@@ -45,12 +46,14 @@ public class DecisionSerializeByteArrayTest {
         try {
             nsctmp = _decision2.processObject(_nsClass, _odc);
             fail();
-        } catch (MempressException ex) {}
+        } catch (MempressException me) {
+
+        }
     }
 
     @Test
     public void testGetOperationType() {
-        assertTrue(_decision1.getOperationType() == SerializerType.ByteArraySerializer);
+        assertTrue(_decision1.getOperationType() == SerializerType.NoSerialized);
     }
 
     private static class SerializableClass implements Serializable {

@@ -106,7 +106,7 @@ public class DecisionTree<E> {
         public SerializerType getOperationType();
     }
 
-    static class ObjectDataCarrier
+    public static class ObjectDataCarrier
     {
         public final Map<String, Object> data =
                 new HashMap<String, Object>();
