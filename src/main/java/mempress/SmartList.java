@@ -28,27 +28,25 @@ public class SmartList<E> implements List<E> {
     //--------------------------------------------------------------------
 
     public SmartList() {
-        this(Long.MAX_VALUE);
-        _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
+        this(DecisionTreeBuilder.<E>buildDefaultTree(), -1, -1);
     }
 
     public SmartList(long maxWeight) {
-        _list = new ArrayList<>();
-        _serializationQueue = new PriorityQueue<>();
-        //weight = new ListWeightListener(maxWeight);
-        weightLimit = maxWeight;
-        _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
+        this(DecisionTreeBuilder.<E>buildDefaultTree(), maxWeight, -1);
     }
 
     public SmartList(DecisionTree<E> decTree, long maxWeight) {
-        this(maxWeight);
-        _decisionTree = decTree;
+        this(decTree, maxWeight, -1);
     }
 
     protected SmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
         Preconditions.checkNotNull(decTree);
 
         _decisionTree = decTree;
+
+        _list = new ArrayList<>();
+        _serializationQueue = new PriorityQueue<>();
+        weightLimit = maxWeight;
 
         if(maxWeight > 0) {
             weightLimit = maxWeight;

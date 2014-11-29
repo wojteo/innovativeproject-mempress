@@ -17,6 +17,20 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
         this.objectType = objectType;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) return true;
+        if(obj == null) return false;
+
+        if(getClass() != obj.getClass())
+            return false;
+
+        ListElement le = (ListElement)obj;
+        return data.equals(le.data) &&
+                objectType.equals(le.objectType) &&
+                useCount == le.useCount;
+    }
+
     public E get() {
         return get(true);
     }
