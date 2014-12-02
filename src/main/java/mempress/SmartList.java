@@ -5,18 +5,17 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
  * Klasa listy; DO NAPISANIA
  * @param <E>
  */
-public class SmartList<E> implements List<E> {
-    //private List<ListElement<E>> _list;
+public class SmartList<E> implements List<E>, Iterable<E> {
     protected List<ListElement<E>> _list;
     private DecisionTree<E> _decisionTree;
     private PriorityQueue<ListElement<E>> _serializationQueue;
-    //private ListWeightListener weight;
     private long weightLimit = -1;
     private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
     private Timer cycleTimer;
@@ -28,27 +27,25 @@ public class SmartList<E> implements List<E> {
     //--------------------------------------------------------------------
 
     public SmartList() {
-        this(Long.MAX_VALUE);
-        _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
+        this(DecisionTreeBuilder.<E>buildDefaultTree(), -1, -1);
     }
 
     public SmartList(long maxWeight) {
-        _list = new ArrayList<>();
-        _serializationQueue = new PriorityQueue<>();
-        //weight = new ListWeightListener(maxWeight);
-        weightLimit = maxWeight;
-        _decisionTree = DecisionTreeBuilder.<E>buildDefaultTree();
+        this(DecisionTreeBuilder.<E>buildDefaultTree(), maxWeight, -1);
     }
 
     public SmartList(DecisionTree<E> decTree, long maxWeight) {
-        this(maxWeight);
-        _decisionTree = decTree;
+        this(decTree, maxWeight, -1);
     }
 
     protected SmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
         Preconditions.checkNotNull(decTree);
 
         _decisionTree = decTree;
+
+        _list = new ArrayList<>();
+        _serializationQueue = new PriorityQueue<>();
+        weightLimit = maxWeight;
 
         if(maxWeight > 0) {
             weightLimit = maxWeight;
@@ -65,7 +62,14 @@ public class SmartList<E> implements List<E> {
     //----------------------------------------------------------------
     @Override
     public boolean remove(Object o) {
-        return false;
+        Preconditions.checkNotNull(o);
+        boolean found = false;
+        for(int i = 0; i < size(); ++i)
+            if(_list.get(i).compare(o)) {
+                _list.remove(i);
+                found = true;
+            }
+        return found;
     }
 
     @Override
@@ -197,29 +201,10 @@ public class SmartList<E> implements List<E> {
     }
 
     @Override
-    public Iterator<E> iterator() {
-        return new SimpleIterator();
+    public boolean isEmpty() {
+        return _list.isEmpty();
     }
 
-    @Override
-    public Object[] toArray() {
-        int size = size();
-        Object[] array = new Object[size()];
-        for(int i = 0; i < size; ++i)
-            array[i] = _list.get(i).get();
-        return array;
-    }
-
-    /**
-     * Niezaimplementowane
-     * @param a
-     * @param <T>
-     * @return
-     */
-    @Override
-    public <T> T[] toArray(T[] a) {
-        throw new UnsupportedOperationException();
-    }
 
     //-----------------------------------------------------------------
     //  PRZESZUKIWANIE LISTY
@@ -233,13 +218,10 @@ public class SmartList<E> implements List<E> {
         Preconditions.checkNotNull(c);
         Preconditions.checkArgument(colsize > 0);
 
-
+        //TODO: compare mało wydajny - wielokrotna deserializacja obiektu
         for(ListElement<E> sle : _list) {
-            Object obj = sle.get(false);
-            if(obj == null)
-                continue;
             for(Object o : c) {
-                if(obj.equals(o))
+                if(sle.compare(o))
                     ++counter;
             }
         }
@@ -280,6 +262,26 @@ public class SmartList<E> implements List<E> {
     }
 
     @Override
+    public boolean contains(Object o) {
+
+        for(ListElement<E> sle : _list) {
+            if(sle.compare(o))
+                return true;
+        }
+
+        return false;
+    }
+
+    //--------------------------------------------------------------------
+    // ITERATORY
+    //--------------------------------------------------------------------
+
+    @Override
+    public Iterator<E> iterator() {
+        return new SimpleIterator();
+    }
+
+    @Override
     public ListIterator<E> listIterator() {
         return new SimpleListIterator();
     }
@@ -287,6 +289,48 @@ public class SmartList<E> implements List<E> {
     @Override
     public ListIterator<E> listIterator(int index) {
         return new SimpleListIterator(index);
+    }
+
+    //--------------------------------------------------------------------
+    // WYDZIELANIE KOLEKCJI
+    //--------------------------------------------------------------------
+
+    @Override
+    public Object[] toArray() {
+        int size = size();
+        Object[] array = new Object[size()];
+        for(int i = 0; i < size; ++i)
+            array[i] = _list.get(i).get();
+        return array;
+    }
+
+    /*
+    @Override
+    public <T> T[] toArray(T[] a) {
+        if(a == null || a.length < size()) {
+            T[] table = (T[]) Array.newInstance(Object.class, size());
+            for (int i = 0; i < size(); ++i)
+                table[i] = (T) get(i);
+            return table;
+        }
+        else {
+            for(int i = 0; i < a.length; ++i) {
+                a[i] = (T)get(i);
+            }
+            return a;
+        }
+    }*/
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T[] a) {
+        Preconditions.checkNotNull(a);
+        if(a.length < size()) {
+            return (T[])Arrays.copyOf(toArray(), size(), a.getClass());
+        } else {
+            System.arraycopy(toArray(), 0, a, 0, size());
+            return a;
+        }
     }
 
     /**
@@ -299,28 +343,9 @@ public class SmartList<E> implements List<E> {
     public List<E> subList(int fromIndex, int toIndex) {
         throw new UnsupportedOperationException();
     }
-
-    @Override
-    public boolean isEmpty() {
-        return _list.isEmpty();
-    }
-
-    @Override
-    public boolean contains(Object o) {
-
-        for(ListElement<E> sle : _list) {
-            if(sle.compare(o))
-                return true;
-        }
-
-        return false;
-    }
-
-
-
-    public long getMaximumWeight() { return weightLimit; }
-
-    public long getCurrentWeight() { return currentWeight.get(); }
+    //--------------------------------------------------------------------
+    // METODY ZWIĄZANE Z FUNKCJONALNOSCIĄ LISTY ORAZ METODY SPOZA List<E>
+    //--------------------------------------------------------------------
 
     // TODO: Dokończyć pisanie
     protected long demoteElements(int numOfElements) {
@@ -363,6 +388,14 @@ public class SmartList<E> implements List<E> {
         return listElement;
     }
 
+    public long getMaximumWeight() { return weightLimit; }
+
+    public long getCurrentWeight() { return currentWeight.get(); }
+
+    //--------------------------------------------------------------------
+    // KLASY WEWNETRZNE
+    //--------------------------------------------------------------------
+
     protected class SimpleIterator implements Iterator<E> {
         private int index = -1;
 
@@ -375,6 +408,7 @@ public class SmartList<E> implements List<E> {
         public E next() {
             int tmp = index + 1;
             if(tmp >= _list.size()) throw new NoSuchElementException();
+            index = tmp;
             return get(tmp);
         }
 
@@ -394,7 +428,7 @@ public class SmartList<E> implements List<E> {
         public SimpleListIterator(int index) {
             if(index < 0 || index > _list.size())
                 throw new IndexOutOfBoundsException();
-            this.index = index;
+            this.index = index - 1;
         }
 
         @Override

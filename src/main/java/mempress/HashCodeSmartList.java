@@ -9,18 +9,18 @@ import java.util.Optional;
  * Created by Bartek on 2014-11-25.
  */
 public class HashCodeSmartList<E> extends SmartList<E> {
-    public HashCodeSmartList() {
+    HashCodeSmartList() {
     }
 
-    public HashCodeSmartList(long maxWeight) {
+    HashCodeSmartList(long maxWeight) {
         super(maxWeight);
     }
 
-    public HashCodeSmartList(DecisionTree<E> decTree, long maxWeight) {
+    HashCodeSmartList(DecisionTree<E> decTree, long maxWeight) {
         super(decTree, maxWeight);
     }
 
-    public HashCodeSmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
+    HashCodeSmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
         super(decTree, maxWeight, timeLimit);
     }
 
