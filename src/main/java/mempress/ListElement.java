@@ -76,7 +76,7 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
         return ret;
     }
 
-    public void assign(ListElement<E> source) {
+    public synchronized void assign(ListElement<E> source) {
         Preconditions.checkNotNull(source);
 
         data = source.data;

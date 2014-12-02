@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class SmartList<E> implements List<E>, Iterable<E> {
     protected List<ListElement<E>> _list;
-    private DecisionTree<E> _decisionTree;
+    protected DecisionTree<E> _decisionTree;
     private PriorityQueue<ListElement<E>> _serializationQueue;
     private long weightLimit = -1;
     private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
@@ -48,7 +48,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         weightLimit = maxWeight;
 
         if(maxWeight > 0) {
-            weightLimit = maxWeight;
+            //weightLimit = maxWeight;
             currentWeight.addListener(new WeightLimitListener());
         }
 
@@ -485,6 +485,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         }
     }
 
+    //TODO: changed nie jest wywoływane!!! Czemu?
     private class WeightLimitListener implements ChangeListener<Number> {
         @Override
         public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {

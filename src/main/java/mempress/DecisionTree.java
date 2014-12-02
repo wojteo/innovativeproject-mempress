@@ -68,12 +68,14 @@ public class DecisionTree<E> {
         E obj = null;
         ListElement<E> tmp = null;
         SerializerType st = wrappedObj.getData().getSerializerType();
+        int startPoint = -1;
         for(int i = 0, s = processors.size(); i < s; ++i) {
             DecisionTreeElement<E> dce = processors.get(i);
             if(!itsTimeToDemote) {
                 if(dce.getOperationType() == st) {
                     itsTimeToDemote = true;
                     obj = wrappedObj.get();
+
                 }
             }
             else {
@@ -88,6 +90,9 @@ public class DecisionTree<E> {
 
     public ListElement<E> goBackToHighestState(ListElement<E> wrappedObj) {
         Preconditions.checkNotNull(wrappedObj);
+
+        if(wrappedObj.getData().getSerializerType() == processors.get(0).getOperationType())
+            return wrappedObj;
 
         E obj = wrappedObj.get();
         int uc = wrappedObj.getUseCount();
