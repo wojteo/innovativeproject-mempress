@@ -30,4 +30,5 @@ public class ListElementWithHashCode<E> extends ListElement<E> {
     public void setHashcode(int hashcode) {
         this.hashcode = hashcode;
     }
+
 }
