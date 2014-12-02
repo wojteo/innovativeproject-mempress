@@ -4,9 +4,7 @@ import com.google.common.base.Preconditions;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.*;
 /**
@@ -24,7 +22,11 @@ public class SmartListTest {
         _testedList.add((secondElement = make(2)));
         _testedList.add((thirdElement = make(3)));
 
-        _serializableClasses = Arrays.asList(make(4), make(5), make(6));
+//        _serializableClasses = Arrays.asList(make(4), make(5), make(6));
+        _serializableClasses = new ArrayList<>(4);
+        _serializableClasses.add(make(4));
+        _serializableClasses.add(make(5));
+        _serializableClasses.add(make(6));
     }
 
 
@@ -102,14 +104,66 @@ public class SmartListTest {
         assertEquals(1, _testedList.lastIndexOf(sc));
         assertEquals(2, _testedList.indexOf(sc2));
 
+        sc = make(Integer.MIN_VALUE);
+        assertEquals(-1, _testedList.indexOf(sc));
+        assertEquals(-1, _testedList.lastIndexOf(sc));
     }
+
+
+    @Test
+    public void testContains() {
+        assertTrue(_testedList.contains(make(3)));
+        assertFalse(_testedList.contains(make(Integer.MIN_VALUE)));
+    }
+
+
 
     @Test
     public void testToArray() {
-        SerializableClass[] serializableClasses = _testedList.toArray(new SerializableClass[3]);
+        SerializableClass[] serializableClasses = _testedList.toArray(new SerializableClass[4]),
+                serializableClasses1 = _testedList.toArray(new SerializableClass[]{}),
+                serializableClasses2 = _testedList.toArray(new SerializableClass[3]);
         Object[] objects = _testedList.toArray();
 
-        assertArrayEquals(serializableClasses, objects);
+        SerializableClass[] expectedValues = { firstElement, secondElement, thirdElement };
+
+        assertArrayEquals(expectedValues, objects);
+        assertArrayEquals(expectedValues, serializableClasses1);
+        assertArrayEquals(expectedValues, serializableClasses2);
+
+        try {
+            assertArrayEquals(expectedValues, serializableClasses);
+            fail();
+        } catch (AssertionError e ) {}
+
+        try {
+            _testedList.toArray(null);
+            fail();
+        } catch (NullPointerException e) {}
+    }
+
+    @Test
+    public void testIterators() {
+        int index = 0;
+        SerializableClass[] elements = {firstElement, secondElement, thirdElement};
+        for(SerializableClass sc : _testedList) {
+            assertEquals(elements[index++], sc);
+        }
+
+        ListIterator<SerializableClass> it = _testedList.listIterator();
+        SerializableClass sc4 = make(4);
+        for(int i = 0; it.hasNext(); ++i) {
+            assertEquals(elements[i], it.next());
+            if(i == 1) {
+                it.add(sc4);
+            }
+        }
+        elements = new SerializableClass[] { firstElement, sc4, secondElement, thirdElement };
+
+        it = _testedList.listIterator(1);
+        for(int i = 1; it.hasNext(); ++i) {
+            assertEquals(elements[i], it.next());
+        }
     }
 
 

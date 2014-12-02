@@ -12,7 +12,7 @@ import java.util.*;
  * Klasa listy; DO NAPISANIA
  * @param <E>
  */
-public class SmartList<E> implements List<E> {
+public class SmartList<E> implements List<E>, Iterable<E> {
     protected List<ListElement<E>> _list;
     private DecisionTree<E> _decisionTree;
     private PriorityQueue<ListElement<E>> _serializationQueue;
@@ -218,7 +218,7 @@ public class SmartList<E> implements List<E> {
         Preconditions.checkNotNull(c);
         Preconditions.checkArgument(colsize > 0);
 
-
+        //TODO: compare mało wydajny - wielokrotna deserializacja obiektu
         for(ListElement<E> sle : _list) {
             for(Object o : c) {
                 if(sle.compare(o))
@@ -304,12 +304,7 @@ public class SmartList<E> implements List<E> {
         return array;
     }
 
-    /**
-     * Niezaimplementowane
-     * @param a
-     * @param <T>
-     * @return
-     */
+    /*
     @Override
     public <T> T[] toArray(T[] a) {
         if(a == null || a.length < size()) {
@@ -324,8 +319,19 @@ public class SmartList<E> implements List<E> {
             }
             return a;
         }
-    }
+    }*/
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T[] a) {
+        Preconditions.checkNotNull(a);
+        if(a.length < size()) {
+            return (T[])Arrays.copyOf(toArray(), size(), a.getClass());
+        } else {
+            System.arraycopy(toArray(), 0, a, 0, size());
+            return a;
+        }
+    }
 
     /**
      * Niezaimplementowane
@@ -402,6 +408,7 @@ public class SmartList<E> implements List<E> {
         public E next() {
             int tmp = index + 1;
             if(tmp >= _list.size()) throw new NoSuchElementException();
+            index = tmp;
             return get(tmp);
         }
 
@@ -421,7 +428,7 @@ public class SmartList<E> implements List<E> {
         public SimpleListIterator(int index) {
             if(index < 0 || index > _list.size())
                 throw new IndexOutOfBoundsException();
-            this.index = index;
+            this.index = index - 1;
         }
 
         @Override

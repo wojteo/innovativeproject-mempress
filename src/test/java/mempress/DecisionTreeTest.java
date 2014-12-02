@@ -13,14 +13,14 @@ import static org.junit.Assert.*;
  * Created by Bartek on 2014-11-28.
  */
 public class DecisionTreeTest {
-    private DecisionTree<NonSerializableClass> _decTree;
-    private NonSerializableClass _firstElement;
+    private DecisionTree<SerializableClass> _decTree;
+    private SerializableClass _firstElement;
     private SerializableClass _secondElement;
     private static int firstElementNum = 13, secondElementNum = 17;
 
     @Before
     public void initTest() {
-        _decTree = DecisionTreeBuilder.<NonSerializableClass>create()
+        _decTree = DecisionTreeBuilder.<SerializableClass>create()
                 .addTreeElement(new DecisionStoreIt<>())
                 .addTreeElement(new DecisionSerializeByteArray<>())
                 .addTreeElement(new DecisionSerializeFile<>())
@@ -63,7 +63,7 @@ public class DecisionTreeTest {
 
     @Test
     public void testDemote() {
-        ListElement<NonSerializableClass> tmp1 = _decTree.processObject(_firstElement),
+        ListElement<SerializableClass> tmp1 = _decTree.processObject(_firstElement),
                 tmp2 = _decTree.processObject(_secondElement);
 
         tmp2= _decTree.demote(tmp2);
@@ -86,7 +86,7 @@ public class DecisionTreeTest {
 
     @Test
     public void testGoBackToHighestState() {
-        ListElement<NonSerializableClass> tmp1 = _decTree.processObject(_firstElement),
+        ListElement<SerializableClass> tmp1 = _decTree.processObject(_firstElement),
                 tmp2 = _decTree.processObject(_secondElement, 1);
 
         assertTrue(tmp1.getData().getSerializerType() == SerializerType.NoSerialized);

@@ -5,13 +5,13 @@ import java.io.Serializable;
 /**
  * Created by Bartek on 2014-11-28.
  */
-public class SerializableClass extends NonSerializableClass implements Serializable {
+public class SerializableClass implements Serializable {
     private int no = 1;
 
     public SerializableClass() {}
 
-    public SerializableClass(int n) {
-        no = n;
+    public SerializableClass(int no) {
+        this.no = no;
     }
 
     public int getNo() {
