@@ -1,9 +1,11 @@
 package mempress;
 
+import java.io.Serializable;
+
 /**
  * Created by Bartek on 2014-11-28.
  */
-public class NonSerializableClass {
+public class NonSerializableClass implements Serializable {
     protected int no = 2;
 
     public NonSerializableClass() {}

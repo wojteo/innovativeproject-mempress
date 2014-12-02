@@ -115,7 +115,20 @@ public class ListElementTest {
             tmp.assign(null);
         } catch (NullPointerException e) {}
 
+        assertNotEquals(_wrappedObj, "");
+
         tmp.assign(_wrappedObj);
         assertEquals(_wrappedObj, tmp);
+    }
+
+    @Test
+    public void testCompare() {
+        prepareObjects(SerializerType.NoSerialized);
+        HCSerializableClass hcSerializableClass = new HCSerializableClass(_scl.getMyId(), _scl.getSomething());
+
+        assertTrue(_wrappedObj.compare(hcSerializableClass));
+
+        hcSerializableClass.setMyId(0);
+        assertFalse(_wrappedObj.compare(hcSerializableClass));
     }
 }
