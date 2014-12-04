@@ -16,22 +16,35 @@ public class SerializerFactory {
 				private static final long serialVersionUID = 2221579104683932370L;
 
 				{
-					put(SerializerType.ByteArraySerializer,
-							new SerializerFac() {
-								public Serializer create() {
-									return new ByteArraySerializer();
-								}
-							});
+
 					put(SerializerType.NoSerialized,
 							new SerializerFac() {
 								public Serializer create() {
 									return new PseudoSerializer();
 								}
 							});
+					put(SerializerType.ByteArraySerializer,
+							new SerializerFac() {
+								public Serializer create() {
+									return new ByteArraySerializer();
+								}
+							});
+					put(SerializerType.ZipByteArraySerializer,
+							new SerializerFac() {
+								public Serializer create() {
+									return new ZipByteArraySerializer();
+								}
+							});
 					put(SerializerType.FileSerializer, 
 							new SerializerFac() {
 								public Serializer create() {
 									return new FileSerializer();
+						}
+					});
+					put(SerializerType.ZipFileSerializer, 
+							new SerializerFac() {
+								public Serializer create() {
+									return new ZipFileSerializer();
 						}
 					});
 				}
