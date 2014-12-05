@@ -17,7 +17,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     protected DecisionTree<E> _decisionTree;
     private PriorityQueue<ListElement<E>> _serializationQueue;
     private long weightLimit = -1;
-    private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
+    //private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
+    private ObservableLong currentWeight = new ObservableLong(0, true);
     private Timer cycleTimer;
     private static int numOfAttemptsToShrinkList = 3;
     private static int numOfAttemptsToGetObject = 3;
@@ -486,13 +487,21 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     //TODO: changed nie jest wywoływane!!! Czemu?
-    private class WeightLimitListener implements ChangeListener<Number> {
+    private class WeightLimitListener implements Observer {
+//        @Override
+//        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+//            long l = newValue.longValue();
+//
+//            if(l > weightLimit)
+//                tryToShrink(l);
+//        }
+
         @Override
-        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-            long l = newValue.longValue();
+        public void update(Observable o, Object arg) {
+            long l = ((ObservableLong)arg).get();
 
             if(l > weightLimit)
-                tryToShrink(l);
+                tryToShrink(1);
         }
 
         private void tryToShrink(long newVal) {
