@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created by Bartek on 2014-11-29.
  */
-public class HCSerializableClass implements Serializable {
+public class HCSerializableClass implements Serializable, Immutable {
     public static int numOfHashCodeCalls = 0;
     private static int id = 0;
     private int myId;

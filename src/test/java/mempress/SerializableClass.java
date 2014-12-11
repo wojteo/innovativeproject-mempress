@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created by Bartek on 2014-11-28.
  */
-public class SerializableClass implements Serializable {
+public class SerializableClass implements Serializable, Immutable {
     private int no = 1;
 
     public SerializableClass() {}

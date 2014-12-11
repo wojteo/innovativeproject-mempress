@@ -16,7 +16,7 @@ import com.google.common.base.Stopwatch;
 
 import mempress.SmartList;
 
-class wrap implements Serializable{
+class wrap implements Serializable, Immutable {
 	
 	/**
 	 * 

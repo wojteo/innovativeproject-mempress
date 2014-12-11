@@ -1,9 +1,11 @@
 package mempress;
 
 import com.google.common.base.Preconditions;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.Serializable;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -166,6 +168,47 @@ public class SmartListTest {
         }
     }
 
+    @Test
+    public void testWeightListener() {
+        SmartList<SerializableClass> serializableClassSmartList = SmartListBuilder.<SerializableClass>create()
+                . weightLimit(1)
+                .decisionTree(DecisionTreeBuilder.<SerializableClass>create()
+                        .addTreeElement(new DecisionStoreIt<>()).addTreeElement(new DecisionSerializeFile<>()).build())
+                .build();
+        SerializableClass[] serializableClasses = { make(4), make(5), make(6) };
+        serializableClassSmartList.addAll(Arrays.asList(serializableClasses));
+
+        try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException(e); }
+
+        for(ListElement<SerializableClass> le : serializableClassSmartList._list)
+            Assert.assertTrue(le.getData().getSerializerType() != SerializerType.FileSerializer);
+    }
+
+    @Test
+    public void testCheckConditions() {
+        SerializableMutableClass smc = new SerializableMutableClass(29);
+        SerializableImmutableClass sic = new SerializableImmutableClass(31);
+
+        List<SerializableMutableClass> list = SmartListBuilder.<SerializableMutableClass>create().build();
+
+        try {
+            list.add(smc);
+            fail();
+        } catch (IllegalArgumentException e) {}
+
+        assertTrue(list.add(sic));
+
+        try {
+            list.set(0, smc);
+            fail();
+        } catch (IllegalArgumentException e) {}
+
+        try {
+            list.add(0, smc);
+            fail();
+        } catch (IllegalArgumentException e) {}
+    }
+
 
     private SerializableClass cloneSC(SerializableClass sc) {
         Preconditions.checkNotNull(sc);
@@ -174,5 +217,44 @@ public class SmartListTest {
 
     private SerializableClass make(int n) {
         return new SerializableClass(n);
+    }
+
+    private static class SerializableImmutableClass extends SerializableMutableClass implements Immutable {
+        public SerializableImmutableClass() {
+        }
+
+        public SerializableImmutableClass(int no) {
+            super(no);
+        }
+    }
+
+    private static class SerializableMutableClass implements Serializable {
+        private int no = 1;
+
+        public SerializableMutableClass() {}
+
+        public SerializableMutableClass(int no) {
+            this.no = no;
+        }
+
+        public int getNo() {
+            return no;
+        }
+
+        public void setNo(int no) {
+            this.no = no;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SerializableMutableClass that = (SerializableMutableClass) o;
+
+            if (no != that.no) return false;
+
+            return true;
+        }
     }
 }

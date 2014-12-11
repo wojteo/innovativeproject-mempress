@@ -5,8 +5,10 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Klasa listy; DO NAPISANIA
@@ -76,44 +78,49 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     @Override
     public boolean addAll(Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
-        ListElement<E> sle;
-        boolean b = true;
-        for(E e : c) {
-            sle = wrapToListElement(e);
-            if(sle == null)
-                b = false;
-            else {
-                b = b && _list.add(sle) && _serializationQueue.add(sle);
-                currentWeight.add(sle.getSize());
-            }
-        }
 
-        return b;
+        final int[] addedElem = {0};
+
+        c.stream().filter(this::checkConditions)
+                .map(obj -> wrapToListElement(obj))
+                .forEach(le -> {
+                    if(le == null)
+                        return;
+                    boolean prev = true;
+                    prev = prev && _list.add(le);
+                    prev = prev && _serializationQueue.add(le);
+                    currentWeight.add(le.getSize());
+                    if(prev) addedElem[0]++;
+                });
+
+        return addedElem[0] > 0;
     }
 
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
-        ListElement<E> sle;
-        boolean b = true;
-        int inx = index;
-        for(E e : c) {
-            sle = wrapToListElement(e);
-            if(sle == null)
-                b = false;
-            else {
-                _list.add(inx++, sle);
-                _serializationQueue.add(sle);
-                currentWeight.add(sle.getSize());
-            }
-        }
 
-        return b;
+        final int[] shift = { index };
+        final int[] addedElem = { 0 };
+
+        c.stream().filter(this::checkConditions)
+                .map(obj -> wrapToListElement(obj))
+                .forEach(le -> {
+                    if(le == null)
+                        return;
+                    _list.add(shift[0]++, le);
+                     _serializationQueue.add(le);
+                    currentWeight.add(le.getSize());
+                    addedElem[0]++;
+                });
+
+        return addedElem[0] > 0;
     }
 
     @Override
     public E set(int index, E element) {
         Preconditions.checkNotNull(element);
+        Preconditions.checkArgument(checkConditions(element));
         ListElement<E> el = wrapToListElement(element),
                 old = _list.set(index, el);
         _serializationQueue.remove(old);
@@ -124,6 +131,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     @Override
     public void add(int index, E element) {
+        Preconditions.checkNotNull(element);
+        Preconditions.checkArgument(checkConditions(element));
         ListElement<E> el = wrapToListElement(element);
         if(el == null) return;
         _list.add(index, el);
@@ -160,6 +169,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     @Override
     public boolean add(E e) {
+        Preconditions.checkNotNull(e);
+        Preconditions.checkArgument(checkConditions(e));
         ListElement<E> element = wrapToListElement(e);
         if(element == null) return false;
         boolean ret =  _list.add(element) && _serializationQueue.add(element);
@@ -190,6 +201,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     @Override
     public void clear() {
         _list.clear();
+        _serializationQueue.clear();
     }
 
     //----------------------------------------------------------------
@@ -387,6 +399,17 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             }
 
         return listElement;
+    }
+
+    protected boolean checkConditions(E obj) {
+        boolean pred = true;
+
+        pred = pred && obj instanceof Serializable;
+        pred = pred && obj instanceof Immutable;
+
+//        if(!pred)
+//            throw new IllegalArgumentException("Given object is not serializable or immutable");
+        return pred;
     }
 
     public long getMaximumWeight() { return weightLimit; }
