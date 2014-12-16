@@ -52,7 +52,7 @@ public class ZipFileSerializer implements Serializer {
 		try {
 			fis = new FileInputStream((File) cd.getData());
 			o = (Object) QuickLZ.decompress(ByteStreams.toByteArray(fis));
-			
+			((File)cd.getData()).delete();
 		} catch (IOException e) {
 			throw new MempressException("Couldn't deserialize file");
 		}
