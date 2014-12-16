@@ -173,10 +173,11 @@ public class test2{
 		int addQ=1180, igQ=200, igrQ=200;
 		long seed1=666;
 		long weightLimit = 1000;
-		int liczba_plikow = 800;
+
 		
 		//stats
 		int countAdd=0, countRem=0, countGet=0;
+		int liczba_plikow = 800;
 		long timeAdd=0, timeRem=0, timeGet=0;
 		Console co = System.console();
 		String type = "";
@@ -184,10 +185,6 @@ public class test2{
 		System.out.println("What size of weightLimit?");
 		type = co.readLine();
 		weightLimit = Long.parseLong(type);
-		
-		System.out.println("How many sample files?");
-		type = co.readLine();
-		liczba_plikow = Integer.parseInt(type);
 		
 		System.out.println("How many inserts?");
 		type = co.readLine();
