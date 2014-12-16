@@ -7,7 +7,9 @@ import javafx.beans.value.ObservableValue;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.sql.Time;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -22,6 +24,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     //private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
     private ObservableLong currentWeight = new ObservableLong(0, true);
     private Timer cycleTimer;
+    private int usesPerCycle = 1;
+    private long timeLimit;
     private static int numOfAttemptsToShrinkList = 3;
     private static int numOfAttemptsToGetObject = 3;
 
@@ -29,15 +33,15 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     //  KONSTRUKTORY
     //--------------------------------------------------------------------
 
-    public SmartList() {
+    protected SmartList() {
         this(DecisionTreeBuilder.<E>buildDefaultTree(), -1, -1);
     }
 
-    public SmartList(long maxWeight) {
+    protected SmartList(long maxWeight) {
         this(DecisionTreeBuilder.<E>buildDefaultTree(), maxWeight, -1);
     }
 
-    public SmartList(DecisionTree<E> decTree, long maxWeight) {
+    protected SmartList(DecisionTree<E> decTree, long maxWeight) {
         this(decTree, maxWeight, -1);
     }
 
@@ -57,6 +61,9 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
         if(timeLimit > 0) {
             // TODO: timer do cyklicznego sprawdzania elementów listy
+            cycleTimer = new Timer();
+            cycleTimer.schedule(new DemoteTimer(), timeLimit);
+            this.timeLimit = TimeUnit.NANOSECONDS.convert(timeLimit, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -416,6 +423,14 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     public long getCurrentWeight() { return currentWeight.get(); }
 
+    public int getUsesPerCycle() {
+        return usesPerCycle;
+    }
+
+    public void setUsesPerCycle(int usesPerCycle) {
+        this.usesPerCycle = usesPerCycle;
+    }
+
     //--------------------------------------------------------------------
     // KLASY WEWNETRZNE
     //--------------------------------------------------------------------
@@ -536,6 +551,23 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                 currentWeight.subtract(newVal);
                 --attemptLeft;
             }
+        }
+    }
+
+    private class DemoteTimer extends TimerTask {
+        // TODO: rozwiązać problem - o ile stopni degradować?
+
+        @Override
+        public void run() {
+            _list.forEach(le -> {
+                long diff = System.nanoTime() - le.getTimeCreated();
+                int useC = le.getUseCount();
+                if(useC == 0 || diff / useC > usesPerCycle * timeLimit) {
+                    try {
+                        _decisionTree.demote(le);
+                    } catch (MempressException e) {}
+                }
+            });
         }
     }
 }

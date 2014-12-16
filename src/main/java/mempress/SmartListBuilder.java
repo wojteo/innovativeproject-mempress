@@ -2,6 +2,8 @@ package mempress;
 
 import com.google.common.base.Preconditions;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by Bartek on 2014-11-25.
  */
@@ -11,6 +13,7 @@ public class SmartListBuilder<E> {
     private long _weightLimit = -1;
     private long _stateTimeLimit = -1;
     private boolean _allowNonImmutableObjects = true;
+    private int _minUsePerCycle;
 
     public static <E> SmartListBuilder<E> create() {
         return new SmartListBuilder<E>();
@@ -37,9 +40,13 @@ public class SmartListBuilder<E> {
         return this;
     }
 
-    public SmartListBuilder<E> statesTimeLimit(long tl) {
+    public SmartListBuilder<E> statesTimeLimit(long tl, TimeUnit unit, int minUsePerCycle) {
         Preconditions.checkArgument(tl > 0, "Time limit must be greater than zero");
-        _stateTimeLimit = tl;
+        Preconditions.checkArgument(minUsePerCycle > 0);
+        long millis = TimeUnit.MILLISECONDS.convert(tl, unit);
+        if(millis == 0) millis = 1;
+        _stateTimeLimit = millis;
+        _minUsePerCycle = minUsePerCycle;
         return this;
     }
 
@@ -60,6 +67,9 @@ public class SmartListBuilder<E> {
 
         if(!_allowNonImmutableObjects)
             tmp = new ImmutableDecorator<E>().decorate(tmp);
+
+        if(_minUsePerCycle != 0)
+            tmp.setUsesPerCycle(_minUsePerCycle);
 
         return tmp;
     }

@@ -53,14 +53,14 @@ public class SmartListIteratorsTest {
         _testedList.demoteElements(3);
         Iterator<SerializableClass> it = SmartListIterators.makePreloadIterator(_testedList, 0, 2);
 
-        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(0).data.getSerializerType());
-        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(1).data.getSerializerType());
-        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(2).data.getSerializerType());
+        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(0).getData().getSerializerType());
+        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(1).getData().getSerializerType());
+        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(2).getData().getSerializerType());
 
         it.next();
         try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
-        assertEquals(SerializerType.NoSerialized, _testedList._list.get(1).data.getSerializerType());
-        assertEquals(SerializerType.NoSerialized, _testedList._list.get(2).data.getSerializerType());
+        assertEquals(SerializerType.NoSerialized, _testedList._list.get(1).getData().getSerializerType());
+        assertEquals(SerializerType.NoSerialized, _testedList._list.get(2).getData().getSerializerType());
     }
 
     private static class DecStoreIt<E> implements DecisionTree.DecisionTreeElement<E> {

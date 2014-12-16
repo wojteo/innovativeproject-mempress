@@ -52,6 +52,6 @@ public class HashCodeSmartList<E> extends SmartList<E> {
         if(le == null)
             return null;
         else
-            return new ListElementWithHashCode<>(le.data, le.objectType, obj.hashCode());
+            return new ListElementWithHashCode<>(le.getData(), le.objectType, obj.hashCode());
     }
 }
