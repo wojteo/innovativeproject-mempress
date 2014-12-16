@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.Time;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     private long weightLimit = -1;
     //private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
     private ObservableLong currentWeight = new ObservableLong(0, true);
+    private WeightLimitListener weightLimitListener;
     private Timer cycleTimer;
     private int usesPerCycle = 1;
     private long timeLimit;
@@ -56,7 +59,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
         if(maxWeight > 0) {
             //weightLimit = maxWeight;
-            currentWeight.addListener(new WeightLimitListener());
+            currentWeight.addListener((weightLimitListener = new WeightLimitListener()));
         }
 
         if(timeLimit > 0) {
@@ -372,16 +375,20 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         long releasedBytes = 0;
         long tmp;
         for(int i = 0; i < numOfElements; ++i) {
-            ListElement<E> sle = _serializationQueue.poll();
-            if(sle == null) continue;
-            int index = _list.indexOf(sle);
-            tmp = sle.getSize();
-            sle = _decisionTree.demote(sle);
-            if(sle == null)
-                continue;
-            releasedBytes += Math.abs(tmp - sle.getSize());
-            _list.set(index, sle);
-            _serializationQueue.add(sle);
+            try {
+                ListElement<E> sle = _serializationQueue.poll();
+                if (sle == null) continue;
+                int index = _list.indexOf(sle);
+                tmp = sle.getSize();
+                sle = _decisionTree.demote(sle);
+                if (sle == null)
+                    continue;
+                releasedBytes += Math.abs(tmp - sle.getSize());
+//                _list.set(index, sle);
+                _serializationQueue.add(sle);
+            } catch (MempressException me) {
+                System.err.println("Przechwycono wyjatek: " + me.getMessage());
+            }
         }
 
         return releasedBytes;
@@ -534,23 +541,35 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 //                tryToShrink(l);
 //        }
 
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
         @Override
         public void update(Observable o, Object arg) {
             long l = ((ObservableLong)arg).get();
 
-            if(l > weightLimit)
-                tryToShrink(1);
+            final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
+            if(l > calculatedLimit) {
+                executorService.submit(() -> {
+                    tryToShrink(calculatedLimit);
+                });
+            }
         }
 
         private void tryToShrink(long newVal) {
-            long tmp;
-            int attemptLeft = _list.size();
-            while (newVal > weightLimit && attemptLeft > 0) {
-                tmp = demoteElements(1);
-                //System.out.println("tmp: " + tmp);
-                currentWeight.subtract(newVal);
-                --attemptLeft;
+            long recoveredSpace = 0;
+            boolean breakOuterLoop = false;
+            for(int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
+                for (int counter = Math.max(_list.size() / 2, 1); counter > 0 ; --counter) {
+                    recoveredSpace += demoteElements(1);
+
+                    if(newVal >= currentWeight.get() - recoveredSpace) {
+                        breakOuterLoop = true;
+                        break;
+                    }
+                }
             }
+
+            currentWeight.subtract(recoveredSpace);
         }
     }
 
