@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 public class SmartList<E> implements List<E>, Iterable<E> {
     protected List<ListElement<E>> _list;
     protected DecisionTree<E> _decisionTree;
-    private PriorityQueue<ListElement<E>> _serializationQueue;
+    private Queue<ListElement<E>> _serializationQueue;
     private long weightLimit = -1;
     //private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
     private ObservableLong currentWeight = new ObservableLong(0, true);
@@ -25,6 +26,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     private long timeLimit;
     private static int numOfAttemptsToShrinkList = 3;
     private static int numOfAttemptsToGetObject = 3;
+
 
     //--------------------------------------------------------------------
     //  KONSTRUKTORY
@@ -52,8 +54,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
         if(maxWeight > 0 || timeLimit > 0) {
             _list = Collections.synchronizedList(new ArrayList<ListElement<E>>());
+            _serializationQueue = new PriorityBlockingQueue<>();
         } else {
             _list = new ArrayList<>();
+            _serializationQueue = new PriorityQueue<>();
         }
 
         weightLimit = maxWeight;
@@ -98,10 +102,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                         return;
                     boolean prev = true;
                     prev = prev && _list.add(le);
-
-                    synchronized (_serializationQueue) {
-                        prev = prev && _serializationQueue.add(le);
-                    }
+                    prev = prev && _serializationQueue.add(le);
                     currentWeight.add(le.getSize());
                     if(prev) addedElem[0]++;
                 });
@@ -122,9 +123,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     if(le == null)
                         return;
                     _list.add(shift[0]++, le);
-                    synchronized (_serializationQueue) {
-                        _serializationQueue.add(le);
-                    }
+                    _serializationQueue.add(le);
+
                     currentWeight.add(le.getSize());
                     addedElem[0]++;
                 });
@@ -139,9 +139,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         ListElement<E> el = wrapToListElement(element),
                 old = _list.set(index, el);
 
-        synchronized (_serializationQueue) {
-            _serializationQueue.remove(old);
-        }
+        _serializationQueue.remove(old);
         currentWeight.subtract(old.getSize());
         currentWeight.add(el.getSize());
         return old.get();
@@ -154,9 +152,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         ListElement<E> el = wrapToListElement(element);
         if(el == null) return;
         _list.add(index, el);
-        synchronized (_serializationQueue) {
-            _serializationQueue.add(el);
-        }
+        _serializationQueue.add(el);
         currentWeight.add(el.getSize());
     }
 
@@ -169,10 +165,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         E obj = null;
 
             obj = el.get();
-        synchronized (_serializationQueue) {
-            _serializationQueue.remove(el);
-        }
-            currentWeight.subtract(el.getSize());
+        _serializationQueue.remove(el);
+        currentWeight.subtract(el.getSize());
 
         return obj;
     }
@@ -198,10 +192,9 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         ListElement<E> element = wrapToListElement(e);
         if(element == null) return false;
         boolean ret = _list.add(element);
-        
-        synchronized (_serializationQueue) {
-            ret = ret && _serializationQueue.add(element);
-        }
+
+        ret = ret && _serializationQueue.add(element);
+
         currentWeight.add(element.getSize());
         return ret;
     }
@@ -344,23 +337,6 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return array;
     }
 
-    /*
-    @Override
-    public <T> T[] toArray(T[] a) {
-        if(a == null || a.length < size()) {
-            T[] table = (T[]) Array.newInstance(Object.class, size());
-            for (int i = 0; i < size(); ++i)
-                table[i] = (T) get(i);
-            return table;
-        }
-        else {
-            for(int i = 0; i < a.length; ++i) {
-                a[i] = (T)get(i);
-            }
-            return a;
-        }
-    }*/
-
     @Override
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
@@ -394,9 +370,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         for(int i = 0; i < numOfElements; ++i) {
             try {
                 ListElement<E> sle = null;
-                synchronized (_serializationQueue) {
-                    sle = _serializationQueue.poll();
-                }
+                sle = _serializationQueue.poll();
                 if (sle == null) continue;
 
                     tmp = sle.getSize();
@@ -405,9 +379,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                         continue;
                     releasedBytes += tmp - sle.getSize();
 
-                synchronized (_serializationQueue) {
-                    _serializationQueue.add(sle);
-                }
+                _serializationQueue.add(sle);
+                
             } catch (MempressException me) {
 //                System.err.println("Przechwycono wyjatek: " + me.getMessage());
             }
