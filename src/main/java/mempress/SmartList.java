@@ -371,7 +371,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     //--------------------------------------------------------------------
 
     // TODO: Dokończyć pisanie
-    protected long demoteElements(int numOfElements) {
+    protected synchronized long demoteElements(int numOfElements) {
         long releasedBytes = 0;
         long tmp;
         for(int i = 0; i < numOfElements; ++i) {
@@ -383,7 +383,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     sle = _decisionTree.demote(sle);
                     if (sle == null)
                         continue;
-                    releasedBytes += Math.abs(tmp - sle.getSize());
+                    releasedBytes += tmp - sle.getSize();
 
                 _serializationQueue.add(sle);
             } catch (MempressException me) {

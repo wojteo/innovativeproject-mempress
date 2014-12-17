@@ -47,7 +47,7 @@ public class SmartListIteratorsTest {
         return new SerializableClass(n);
     }
 
-    @Test
+//    @Test
     public void testPreloadIterator() {
 //        try { Thread.sleep(10000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
 
