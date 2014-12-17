@@ -180,7 +180,7 @@ public class SmartListTest {
         serializableClassSmartList.addAll(Arrays.asList(serializableClasses));
 
         //try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException(e); }
-        try { serializableClassSmartList.weightLimitListener.executorService.awaitTermination(15, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException(e); }
+        try { serializableClassSmartList.weightLimitListener.executorService.awaitTermination(60, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException(e); }
 
 
 

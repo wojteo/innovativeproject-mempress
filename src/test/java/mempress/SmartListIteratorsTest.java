@@ -61,7 +61,7 @@ public class SmartListIteratorsTest {
         it.next();
 //        try { Thread.sleep(20000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
 //        while(!it.tasks.isTerminated());
-        try { it.tasks.awaitTermination(20, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
+        try { it.tasks.awaitTermination(60, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
 
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(1).getData().getSerializerType());
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(2).getData().getSerializerType());

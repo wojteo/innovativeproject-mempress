@@ -52,7 +52,7 @@ public class SmartListIterators {
             index = startIndex - 1;
             prepareInAdv = prepareObjectsInAdvance;
             buffer = new LinkedList<>();
-            tasks = Executors.newFixedThreadPool(prepareObjectsInAdvance);
+            tasks = Executors.newSingleThreadExecutor();
         }
 
         @Override
