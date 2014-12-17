@@ -74,7 +74,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     //  MODYFIKOWANIE ZAWARTOSCI LISTY
     //----------------------------------------------------------------
     @Override
-    public boolean remove(Object o) {
+    public synchronized boolean remove(Object o) {
         Preconditions.checkNotNull(o);
         boolean found = false;
         for(int i = 0; i < size(); ++i)
@@ -86,7 +86,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
+    public synchronized boolean addAll(Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
 
         final int[] addedElem = {0};
@@ -107,7 +107,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends E> c) {
+    public synchronized boolean addAll(int index, Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
 
         final int[] shift = { index };
@@ -128,7 +128,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     @Override
-    public E set(int index, E element) {
+    public synchronized E set(int index, E element) {
         Preconditions.checkNotNull(element);
         Preconditions.checkArgument(checkConditions(element));
         ListElement<E> el = wrapToListElement(element),
@@ -140,7 +140,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     @Override
-    public void add(int index, E element) {
+    public synchronized void add(int index, E element) {
         Preconditions.checkNotNull(element);
         Preconditions.checkArgument(checkConditions(element));
         ListElement<E> el = wrapToListElement(element);
@@ -151,7 +151,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     @Override
-    public E remove(int index) {
+    public synchronized E remove(int index) {
         ListElement<E> el = _list.remove(index);
         if(el == null)
             return null;
@@ -178,7 +178,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     @Override
-    public boolean add(E e) {
+    public synchronized boolean add(E e) {
         Preconditions.checkNotNull(e);
         Preconditions.checkArgument(checkConditions(e));
         ListElement<E> element = wrapToListElement(e);
@@ -378,13 +378,13 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             try {
                 ListElement<E> sle = _serializationQueue.poll();
                 if (sle == null) continue;
-                int index = _list.indexOf(sle);
-                tmp = sle.getSize();
-                sle = _decisionTree.demote(sle);
-                if (sle == null)
-                    continue;
-                releasedBytes += Math.abs(tmp - sle.getSize());
-//                _list.set(index, sle);
+
+                    tmp = sle.getSize();
+                    sle = _decisionTree.demote(sle);
+                    if (sle == null)
+                        continue;
+                    releasedBytes += Math.abs(tmp - sle.getSize());
+
                 _serializationQueue.add(sle);
             } catch (MempressException me) {
                 System.err.println("Przechwycono wyjatek: " + me.getMessage());
@@ -410,7 +410,6 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                 listElement.setIdentityHC(System.identityHashCode(obj));
                 break;
             } catch (MempressException me) {
-                //demoteElements(1);
             }
 
         return listElement;
@@ -552,7 +551,6 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             if(l > calculatedLimit) {
                 executorService.submit(() -> {
                     tryToShrink(calculatedLimit);
-//                    System.out.println("END");
                 });
             }
         }
