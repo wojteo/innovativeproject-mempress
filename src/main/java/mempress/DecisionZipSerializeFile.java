@@ -3,7 +3,7 @@ package mempress;
 import mempress.DecisionTree.DecisionTreeElement;
 import mempress.DecisionTree.ObjectDataCarrier;
 
-public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
+public class DecisionZipSerializeFile<E> implements DecisionTreeElement<E> {
 
 	@Override
 	public boolean checkConditions(E obj, ObjectDataCarrier metadata) {
@@ -18,7 +18,7 @@ public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
 		@SuppressWarnings("unchecked")
 		Class<E> objType = (Class<E>)obj.getClass();
 
-		Serializer ser = SerializerFactory.createSerializer(SerializerType.FileSerializer);
+		Serializer ser = SerializerFactory.createSerializer(SerializerType.ZipFileSerializer);
 		ClassData cd = ser.ser(obj);
 		
 		ListElement<E> le = new ListElement<>(cd, objType);
@@ -27,7 +27,7 @@ public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
 
 	@Override
 	public SerializerType getOperationType() {
-		return SerializerType.FileSerializer;
+		return SerializerType.ZipFileSerializer;
 	}
 
 }

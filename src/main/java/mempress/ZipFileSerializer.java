@@ -1,10 +1,12 @@
 package mempress;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import com.google.common.io.ByteStreams;
@@ -57,8 +59,12 @@ public class ZipFileSerializer implements Serializer {
 		Object o = null;
 		try {
 			fis = new FileInputStream((File) cd.getData());
-			o = (Object) QuickLZ.decompress(ByteStreams.toByteArray(fis));
-		} catch (IOException e) {
+			byte[] b =  QuickLZ.decompress(ByteStreams.toByteArray(fis));
+			ByteArrayInputStream bais = new ByteArrayInputStream(b);
+			ObjectInputStream oos = new ObjectInputStream(bais);
+			o = oos.readObject();
+			
+		} catch (IOException | ClassNotFoundException e) {
 			throw new MempressException("Couldn't deserialize file");
 		}
 
