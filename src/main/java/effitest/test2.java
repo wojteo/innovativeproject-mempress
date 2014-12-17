@@ -4,13 +4,17 @@ import java.util.List;
 import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
+
 import mempress.*;
+
 import com.google.common.base.Stopwatch;
 
 class bytewrap implements Serializable, Immutable{
@@ -42,7 +46,21 @@ public class test2{
 	
 	public static void main(String[] args){
 		
-		System.out.println("Files 'sampleX.txt' are required, where X goes from 1 to number of files");
+		File csv = new File("dane.csv");
+		FileWriter writer=null;
+		int tick=0;
+		try{
+			csv.createNewFile();
+			writer = new FileWriter(csv);
+			writer.append("tick,add,get,remove\n").flush();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+		
+		
+		
+		//pliki w formacie sampleX.txt gdzie X nalezy do [1, liczba_plikow]
+		System.out.println("Do testów należy utworzyć pliki 'sampleX.txt'");
 		
 		//configuration
 		int addQ=1180, igQ=200, igrQ=200;
@@ -59,7 +77,7 @@ public class test2{
 		System.out.println("What size of weightLimit?");
 		type = co.readLine();
 		weightLimit = Long.parseLong(type);
-
+		
 		System.out.println("How many sample files?");
 		type = co.readLine();
 		liczba_plikow = Integer.parseInt(type);
@@ -103,13 +121,17 @@ public class test2{
 				File f = new File(pth);
 				InputStream fis = new FileInputStream(f);
 				long size = Files.size(Paths.get(pth));
+				
 				bytewrap bw = new bytewrap();
-				bw.b = new byte[(int)size];
+				bw.b=new byte[(int)size];
 				fis.read(bw.b);
 				
 				Stopwatch sw = Stopwatch.createStarted();
 					sl.add(pos, bw);
 				sw.stop();
+				
+				writer.append(tick+","+(sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)+",,\n")).flush();
+				tick++;
 				
 				timeAdd += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
 				countAdd++;
@@ -119,8 +141,8 @@ public class test2{
 			}
 			System.out.println("Finished insertOnly");
 			
-			System.out.println("Starting getOnly, press enter");
-			co.readLine();
+			System.out.println("Starting getOnly");
+			//co.readLine();
 			for(i=0; i<igQ; i++){
 				int pos = sl.size();
 				if(pos>0)
@@ -133,6 +155,9 @@ public class test2{
 					Stopwatch sw = Stopwatch.createStarted();
 					bw = sl.get(pos);
 					sw.stop();
+					
+					writer.append(tick+",,"+(sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)+",\n")).flush();
+					tick++;
 					timeGet += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
 					countGet++;
 					System.out.println("list.get("+pos+"), list.size = "+sl.size());
@@ -141,8 +166,8 @@ public class test2{
 			System.out.println("Finished getOnly");
 			
 			
-			System.out.println("Starting insert-get, press enter");
-			co.readLine();
+			System.out.println("Starting insert-get");
+			//co.readLine();
 			for(i=0; i<igQ; i++){
 				int x = rnd.nextInt(liczba_plikow)+1;
 				int pos = sl.size();
@@ -158,14 +183,17 @@ public class test2{
 					File f = new File(pth);
 					InputStream fis = new FileInputStream(f);
 					long size = Files.size(Paths.get(pth));
+					
 					bytewrap bw = new bytewrap();
-					bw.b = new byte[(int)size];
+					bw.b=new byte[(int)size];
 					fis.read(bw.b);
 					
 					Stopwatch sw = Stopwatch.createStarted();
 						sl.add(pos, bw);
 					sw.stop();
 					
+					writer.append(tick+","+(sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)+",,\n")).flush();
+					tick++;
 					timeAdd += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
 					countAdd++;
 					fis.close();
@@ -177,6 +205,9 @@ public class test2{
 					Stopwatch sw = Stopwatch.createStarted();
 					bw = sl.get(pos);
 					sw.stop();
+					
+					writer.append(tick+",,"+(sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)+",\n")).flush();
+					tick++;
 					timeGet += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
 					countGet++;
 					System.out.println("list.get("+pos+"), list.size = "+sl.size());
@@ -184,8 +215,8 @@ public class test2{
 			}
 			System.out.println("Finished Add-Get");
 			
-			System.out.println("Starting Add-Get-Remove, press enter");
-			co.readLine();
+			System.out.println("Starting Add-Get-Remove");
+			//co.readLine();
 			for(i=0; i<igQ; i++){
 				int x = rnd.nextInt(liczba_plikow)+1;
 				int pos = sl.size();
@@ -201,14 +232,17 @@ public class test2{
 					File f = new File(pth);
 					InputStream fis = new FileInputStream(f);
 					long size = Files.size(Paths.get(pth));
+					
 					bytewrap bw = new bytewrap();
-					bw.b = new byte[(int)size];
+					bw.b=new byte[(int)size];
 					fis.read(bw.b);
 					
 					Stopwatch sw = Stopwatch.createStarted();
 						sl.add(pos, bw);
 					sw.stop();
 					
+					writer.append(tick+","+(sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)+",,\n")).flush();
+					tick++;
 					timeAdd += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
 					countAdd++;
 					fis.close();
@@ -220,6 +254,9 @@ public class test2{
 					Stopwatch sw = Stopwatch.createStarted();
 					bw = sl.get(pos);
 					sw.stop();
+					
+					writer.append(tick+",,"+(sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)+",\n")).flush();
+					tick++;
 					timeGet += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
 					countGet++;
 					System.out.println("list.get("+pos+"), list.size = "+sl.size());
@@ -229,6 +266,9 @@ public class test2{
 					Stopwatch sw = Stopwatch.createStarted();
 					bw = sl.remove(pos);
 					sw.stop();
+										
+					writer.append(tick+",,,"+(sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)+"\n")).flush();
+					tick++;
 					timeRem += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
 					countRem++;
 					System.out.println("REM list.remove("+pos+"), list.size = "+sl.size());
