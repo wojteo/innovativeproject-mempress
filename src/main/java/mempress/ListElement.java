@@ -12,6 +12,7 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
     protected Class<E> objectType;
     protected ReentrantLock lock = new ReentrantLock();
     private int useCount;
+    private int identityHC;
     private long timeCreated;
 
     public ListElement(ClassData data, Class<E> objectType) {
@@ -126,11 +127,23 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
         }
     }
 
+    public int getIdentityHC() {
+        return identityHC;
+    }
+
+    public void setIdentityHC(int identityHC) {
+        this.identityHC = identityHC;
+    }
+
     public boolean compare(Object secondObj) {
-        return get(false).equals(secondObj);
+        if(System.identityHashCode(secondObj) == identityHC)
+            return true;
+        else
+            return get(false).equals(secondObj);
     }
 
     public long getTimeCreated() {
         return timeCreated;
     }
+
 }

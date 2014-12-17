@@ -65,24 +65,26 @@ public class DecisionTree<E> {
     public ListElement<E> demote(ListElement<E> wrappedObj) {
         wrappedObj.lock.lock();
         try {
-            boolean itsTimeToDemote = false;
-            ObjectDataCarrier metadata = new ObjectDataCarrier();
-            E obj = null;
-            ListElement<E> tmp = null;
-            SerializerType st = wrappedObj.getData().getSerializerType();
-            int startPoint = -1;
-            for (int i = 0, s = processors.size(); i < s; ++i) {
-                DecisionTreeElement<E> dce = processors.get(i);
-                if (!itsTimeToDemote) {
-                    if (dce.getOperationType() == st) {
-                        itsTimeToDemote = true;
-                        obj = wrappedObj.get();
+            if(processors.get(processors.size()-1).getOperationType() != wrappedObj.getData().getSerializerType()) {
+                boolean itsTimeToDemote = false;
+                ObjectDataCarrier metadata = new ObjectDataCarrier();
+                E obj = null;
+                ListElement<E> tmp = null;
+                SerializerType st = wrappedObj.getData().getSerializerType();
+                int startPoint = -1;
+                for (int i = 0, s = processors.size(); i < s; ++i) {
+                    DecisionTreeElement<E> dce = processors.get(i);
+                    if (!itsTimeToDemote) {
+                        if (dce.getOperationType() == st) {
+                            itsTimeToDemote = true;
+                            obj = wrappedObj.get();
 
+                        }
+                    } else {
+                        tmp = processObject(obj, i);
+                        wrappedObj.assign(tmp);
+                        return wrappedObj;
                     }
-                } else {
-                    tmp = processObject(obj, i);
-                    wrappedObj.assign(tmp);
-                    return wrappedObj;
                 }
             }
         } finally {

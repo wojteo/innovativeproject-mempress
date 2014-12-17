@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 /**
@@ -171,17 +172,20 @@ public class SmartListTest {
     @Test
     public void testWeightListener() {
         SmartList<SerializableClass> serializableClassSmartList = SmartListBuilder.<SerializableClass>create()
-                . weightLimit(1)
+                .weightLimit(1)
                 .decisionTree(DecisionTreeBuilder.<SerializableClass>create()
                         .addTreeElement(new DecisionStoreIt<>()).addTreeElement(new DecisionSerializeFile<>()).build())
                 .build();
         SerializableClass[] serializableClasses = { make(4), make(5), make(6) };
         serializableClassSmartList.addAll(Arrays.asList(serializableClasses));
 
-        try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException(e); }
+        //try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException(e); }
+        try { serializableClassSmartList.weightLimitListener.executorService.awaitTermination(15, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException(e); }
+
+
 
         for(ListElement<SerializableClass> le : serializableClassSmartList._list)
-            Assert.assertTrue(le.getData().getSerializerType() != SerializerType.FileSerializer);
+            Assert.assertTrue(le.getData().getSerializerType() == SerializerType.FileSerializer);
     }
 
     @Test

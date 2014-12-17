@@ -2,10 +2,8 @@ package mempress;
 
 import com.google.common.base.Preconditions;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Created by Bartek on 2014-12-02.
@@ -35,6 +33,8 @@ public class SmartListIterators {
         private final SmartList<T> smartList;
         private int index = -1;
         private int prepareInAdv;
+        private LinkedList<Future<T>> buffer;
+        private ExecutorService tasks;
 
         public PreloadIterator(SmartList<T> sl) {
             this(sl, 0, 2);
@@ -51,6 +51,8 @@ public class SmartListIterators {
             Preconditions.checkArgument(startIndex >= 0 && startIndex < smartList.size());
             index = startIndex - 1;
             prepareInAdv = prepareObjectsInAdvance;
+            buffer = new LinkedList<>();
+            tasks = Executors.newFixedThreadPool(prepareObjectsInAdvance);
         }
 
         @Override
@@ -64,31 +66,38 @@ public class SmartListIterators {
             if(tmp >= smartList.size())
                 throw new NoSuchElementException();
 
-            T obj = smartList.get(tmp);
-            index = tmp;
+            prepareNextElements(prepareInAdv - buffer.size());
 
-            prepareNextElements(prepareInAdv);
-
-            return obj;
+            try {
+                T obj = buffer.removeFirst().get();
+                index = tmp;
+                prepareNextElements(prepareInAdv);
+                return obj;
+            } catch (Exception e) {
+                throw new NoSuchElementException(e.getMessage());
+            }
         }
 
         private void prepareNextElements(final int num) {
-            final int startIndex = index + 1;
 
-            Thread t = new Thread() {
-                @Override
-                public void run() {
-                    for(int i = startIndex; i < startIndex + num; ++i) {
-                        if(smartList.size() <= i)
-                            break;
-                        smartList._decisionTree.goBackToHighestState(smartList._list.get(i));
+            int startIndex = index + 1;
+
+            for(int i = startIndex; i < startIndex + num; ++i) {
+                if(smartList.size() <= i)
+                    break;
+
+                final int pos = i;
+
+                FutureTask<T> ft = new FutureTask<T>(new Callable<T>() {
+                    @Override
+                    public T call() throws Exception {
+                        return smartList.get(pos);
                     }
-                }
-            };
+                });
 
-            t.start();
-
-            int z = 2;
+                tasks.submit(ft);
+                buffer.addLast(ft);
+            }
         }
     }
 }

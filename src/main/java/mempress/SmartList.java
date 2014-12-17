@@ -25,7 +25,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     private long weightLimit = -1;
     //private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
     private ObservableLong currentWeight = new ObservableLong(0, true);
-    private WeightLimitListener weightLimitListener;
+    WeightLimitListener weightLimitListener;
     private Timer cycleTimer;
     private int usesPerCycle = 1;
     private long timeLimit;
@@ -407,9 +407,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         for (int i = 0; i < numOfAttemptsToShrinkList; ++i)
             try {
                 listElement = _decisionTree.processObject(obj);
+                listElement.setIdentityHC(System.identityHashCode(obj));
                 break;
             } catch (MempressException me) {
-                demoteElements(1);
+                //demoteElements(1);
             }
 
         return listElement;
@@ -532,7 +533,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     //TODO: changed nie jest wywoływane!!! Czemu?
-    private class WeightLimitListener implements Observer {
+    class WeightLimitListener implements Observer {
 //        @Override
 //        public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 //            long l = newValue.longValue();
@@ -551,6 +552,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             if(l > calculatedLimit) {
                 executorService.submit(() -> {
                     tryToShrink(calculatedLimit);
+//                    System.out.println("END");
                 });
             }
         }
@@ -559,7 +561,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             long recoveredSpace = 0;
             boolean breakOuterLoop = false;
             for(int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
-                for (int counter = Math.max(_list.size() / 2, 1); counter > 0 ; --counter) {
+                for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0 ; --counter) {
                     recoveredSpace += demoteElements(1);
 
                     if(newVal >= currentWeight.get() - recoveredSpace) {

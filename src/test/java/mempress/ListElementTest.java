@@ -3,6 +3,7 @@ package mempress;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
@@ -130,5 +131,16 @@ public class ListElementTest {
 
         hcSerializableClass.setMyId(0);
         assertFalse(_wrappedObj.compare(hcSerializableClass));
+
+        SerializableWOEquals swe = new SerializableWOEquals();
+        ListElement<SerializableWOEquals> leswe = new ListElement<>(SerializerFactory.createSerializer(SerializerType.ByteArraySerializer).ser(swe), SerializableWOEquals.class);
+        leswe.setIdentityHC(System.identityHashCode(swe));
+        assertTrue(leswe.compare(swe));
+        assertEquals(SerializerType.ByteArraySerializer, leswe.getData().getSerializerType());
+    }
+
+    static class SerializableWOEquals implements Serializable {
+        public int i = 3;
+        public double d = 5.25;
     }
 }

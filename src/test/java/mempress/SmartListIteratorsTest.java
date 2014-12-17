@@ -58,7 +58,7 @@ public class SmartListIteratorsTest {
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(2).getData().getSerializerType());
 
         it.next();
-        try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
+        try { Thread.sleep(10000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(1).getData().getSerializerType());
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(2).getData().getSerializerType());
     }
