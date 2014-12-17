@@ -17,13 +17,13 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     protected List<ListElement<E>> _list;
     protected DecisionTree<E> _decisionTree;
     private Queue<ListElement<E>> _serializationQueue;
-    private long weightLimit = -1;
+    private long weightLimit = 0;
     //private SimpleLongProperty currentWeight = new SimpleLongProperty(0);
     private ObservableLong currentWeight = new ObservableLong(0, true);
     WeightLimitListener weightLimitListener;
     private Timer cycleTimer;
     private int usesPerCycle = 1;
-    private long timeLimit;
+    private long timeLimit = 0;
     private static int numOfAttemptsToShrinkList = 3;
     private static int numOfAttemptsToGetObject = 3;
 
@@ -162,9 +162,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
         if(el == null)
             return null;
-        E obj = null;
-
-            obj = el.get();
+        E obj = el.get();
         _serializationQueue.remove(el);
         currentWeight.subtract(el.getSize());
 
@@ -199,14 +197,35 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return ret;
     }
 
-    /**
-     * Niezaimplementowane
-     * @param c
-     * @return
-     */
     @Override
     public boolean removeAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
+        boolean modified = false;
+        for(int i = 0; i < _list.size(); ++i) {
+            ListElement<E> le = _list.get(i);
+            int hc = le.getIdentityHC();
+            E obj = null;
+            for(Object o : c) {
+                if(System.identityHashCode(o) == hc) {
+                    if(remove(i--) != null) {
+                        modified = true;
+                    }
+                    break;
+                }
+                else {
+                    if(obj == null) {
+                        obj = le.get(false);
+                    }
+                    if(obj.equals(o)) {
+                        if(remove(i--) != null) {
+                            modified = true;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        return modified;
     }
 
     /**
@@ -350,14 +369,30 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     /**
-     * Niezaimplementowane
-     * @param fromIndex
+     * Zwraca fragment SmartListy. Fragment też jest typu SmartList
+     * @param fromIndex indeks pierwszego elementu do skopiowania
      * @param toIndex
      * @return
      */
     @Override
     public List<E> subList(int fromIndex, int toIndex) {
-        throw new UnsupportedOperationException();
+        Preconditions.checkArgument(!(fromIndex < 0 || toIndex > size() || fromIndex > toIndex));
+
+        SmartList<E> sl = new SmartList<>(_decisionTree, weightLimit, TimeUnit.MILLISECONDS.convert(timeLimit, TimeUnit.NANOSECONDS));
+        final long[] weight = {0};
+        _list.stream()
+                .skip(fromIndex)
+                .limit(toIndex - fromIndex)
+                .forEach(el -> {
+                    sl._list.add(el);
+                    sl._serializationQueue.add(el);
+                    weight[0] += el.getSize();
+                });
+
+        if(sl.weightLimitListener != null)
+            sl.currentWeight.setValue(weight[0]);
+
+        return sl;
     }
     //--------------------------------------------------------------------
     // METODY ZWIĄZANE Z FUNKCJONALNOSCIĄ LISTY ORAZ METODY SPOZA List<E>
@@ -380,7 +415,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     releasedBytes += tmp - sle.getSize();
 
                 _serializationQueue.add(sle);
-                
+
             } catch (MempressException me) {
 //                System.err.println("Przechwycono wyjatek: " + me.getMessage());
             }
