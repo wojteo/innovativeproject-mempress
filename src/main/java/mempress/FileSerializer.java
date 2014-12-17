@@ -27,8 +27,14 @@ public class FileSerializer implements Serializer {
 
 			tFile.deleteOnExit();
 
-			ClassData cd = new ClassData(SerializerType.FileSerializer, tFile,
-					0);
+			ClassData cd = new ClassData(SerializerType.FileSerializer, tFile,0){
+				@Override
+				protected void finalize() {
+					try{
+						((File)getData()).delete();
+					}catch(Exception e){}
+				}
+			}; 
 
 			return cd;
 		} catch (IOException e) {
@@ -47,7 +53,6 @@ public class FileSerializer implements Serializer {
 
 			o = ois.readObject();
 			ois.close();
-			((File)cd.getData()).delete();
 		} catch (ClassNotFoundException | IOException e) {
 			throw new MempressException("Couldn't deserialize file");
 		}
