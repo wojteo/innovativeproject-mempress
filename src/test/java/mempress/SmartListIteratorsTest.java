@@ -8,6 +8,7 @@ import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 /**
@@ -51,14 +52,17 @@ public class SmartListIteratorsTest {
 //        try { Thread.sleep(10000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
 
         _testedList.demoteElements(3);
-        Iterator<SerializableClass> it = SmartListIterators.makePreloadIterator(_testedList, 0, 2);
+        SmartListIterators.PreloadIterator<SerializableClass> it = (SmartListIterators.PreloadIterator<SerializableClass>) SmartListIterators.<SerializableClass>makePreloadIterator(_testedList, 0, 3);
 
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(0).getData().getSerializerType());
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(1).getData().getSerializerType());
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(2).getData().getSerializerType());
 
         it.next();
-        try { Thread.sleep(10000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
+//        try { Thread.sleep(20000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
+//        while(!it.tasks.isTerminated());
+        try { it.tasks.awaitTermination(20, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
+
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(1).getData().getSerializerType());
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(2).getData().getSerializerType());
     }

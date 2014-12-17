@@ -34,7 +34,7 @@ public class SmartListIterators {
         private int index = -1;
         private int prepareInAdv;
         private LinkedList<Future<T>> buffer;
-        private ExecutorService tasks;
+        protected ExecutorService tasks;
 
         public PreloadIterator(SmartList<T> sl) {
             this(sl, 0, 2);
@@ -66,12 +66,11 @@ public class SmartListIterators {
             if(tmp >= smartList.size())
                 throw new NoSuchElementException();
 
-            prepareNextElements(prepareInAdv - buffer.size());
+            prepareNextElements(Math.max(prepareInAdv - buffer.size(), 0));
 
             try {
                 T obj = buffer.removeFirst().get();
                 index = tmp;
-                prepareNextElements(prepareInAdv);
                 return obj;
             } catch (Exception e) {
                 throw new NoSuchElementException(e.getMessage());
