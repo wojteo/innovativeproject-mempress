@@ -94,7 +94,7 @@ public class SmartListIterators {
                     }
                 });
 
-                tasks.submit(ft);
+                tasks.execute(ft);
                 buffer.addLast(ft);
             }
         }

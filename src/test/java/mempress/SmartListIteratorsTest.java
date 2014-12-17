@@ -67,6 +67,20 @@ public class SmartListIteratorsTest {
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(2).getData().getSerializerType());
     }
 
+    @Test
+    public void testPreloadIterator2() {
+        _testedList.demoteElements(3);
+        SmartListIterators.PreloadIterator<SerializableClass> it = (SmartListIterators.PreloadIterator<SerializableClass>) SmartListIterators.<SerializableClass>makePreloadIterator(_testedList, 0, 3);
+
+        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(0).getData().getSerializerType());
+        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(1).getData().getSerializerType());
+        assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(2).getData().getSerializerType());
+
+        assertEquals(firstElement, it.next());
+        assertEquals(secondElement, it.next());
+        assertEquals(thirdElement, it.next());
+    }
+
     private static class DecStoreIt<E> implements DecisionTree.DecisionTreeElement<E> {
         @Override
         public boolean checkConditions(E obj, DecisionTree.ObjectDataCarrier metadata) {
