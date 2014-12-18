@@ -2,26 +2,38 @@ package mempress;
 
 import com.google.common.base.Preconditions;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by Bartek on 2014-11-25.
  */
 public class HashCodeSmartList<E> extends SmartList<E> {
-    HashCodeSmartList() {
+//    protected Map<ListElementWithHashCode<E>, Integer> holdElements;
+    protected Set<ListElementWithHashCode<E>> holdElements;
+
+    protected HashCodeSmartList() {
+        init();
     }
 
-    HashCodeSmartList(long maxWeight) {
-        super(maxWeight);
+    protected HashCodeSmartList(long maxWeight) {
+        super(maxWeight); init();
     }
 
-    HashCodeSmartList(DecisionTree<E> decTree, long maxWeight) {
-        super(decTree, maxWeight);
+    protected HashCodeSmartList(DecisionTree<E> decTree, long maxWeight) {
+        super(decTree, maxWeight); init();
     }
 
-    HashCodeSmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
+    protected HashCodeSmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
         super(decTree, maxWeight, timeLimit);
+        init();
+    }
+
+    private void init() {
+        if(getMaximumWeight() > 0 || getTimeLimit() > 0) {
+            holdElements = Collections.synchronizedSet(new HashSet<ListElementWithHashCode<E>>());
+        } else {
+            holdElements = new HashSet<>();
+        }
     }
 
     @Override
@@ -51,7 +63,21 @@ public class HashCodeSmartList<E> extends SmartList<E> {
         ListElement<E> le = super.wrapToListElement(obj);
         if(le == null)
             return null;
-        else
-            return new ListElementWithHashCode<>(le.getData(), le.objectType, obj.hashCode());
+
+        ListElementWithHashCode<E> lewh =
+                new ListElementWithHashCode<>(le.getData(), le.objectType, obj.hashCode());
+        lewh.setIdentityHC(le.getIdentityHC());
+
+        if(!holdElements.add(lewh)) {
+            for(ListElementWithHashCode<E> listElementWithHashCode : holdElements) {
+                if(listElementWithHashCode.equals(lewh)) {
+                    lewh = listElementWithHashCode;
+                    break;
+                }
+            }
+        }
+
+        return lewh;
     }
+
 }

@@ -49,7 +49,7 @@ public class HashCodeSmartListTest {
 
     @Test
     public void testIndexOf() {
-        assertEquals(_list.indexOf(_sampleElement), 1);
+        assertEquals(1, _list.indexOf(_sampleElement));
     }
 
     @Test
@@ -59,8 +59,8 @@ public class HashCodeSmartListTest {
         int hashCodeUseCountBefore = HCSerializableClass.numOfHashCodeCalls;
         HCSerializableClass hcSerializableClass = new HCSerializableClass(3, "Third element");
 
-        assertEquals(_list.indexOf(hcSerializableClass), 2);
-        assertEquals(_list.lastIndexOf(hcSerializableClass), 4);
+        assertEquals(2, _list.indexOf(hcSerializableClass));
+        assertEquals(4, _list.lastIndexOf(hcSerializableClass));
 
         // Maksimum cztery wywołania hashCode!!!
         assertTrue(HCSerializableClass.numOfHashCodeCalls - hashCodeUseCountBefore == 4);

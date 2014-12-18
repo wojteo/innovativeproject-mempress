@@ -460,6 +460,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     public long getCurrentWeight() { return currentWeight.get(); }
 
+    public long getTimeLimit() {
+        return timeLimit;
+    }
+
     public int getUsesPerCycle() {
         return usesPerCycle;
     }

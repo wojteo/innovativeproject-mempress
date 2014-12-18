@@ -4,7 +4,7 @@ package mempress;
  * Created by Bartek on 2014-11-25.
  */
 public class ListElementWithHashCode<E> extends ListElement<E> {
-    private int hashcode;
+    protected int hashcode;
 
     public ListElementWithHashCode(ClassData data, Class<E> objectType, int hashcode) {
         super(data, objectType);
@@ -13,7 +13,11 @@ public class ListElementWithHashCode<E> extends ListElement<E> {
 
     @Override
     public boolean compare(Object secondObj) {
-        return Integer.compare(hashcode, secondObj.hashCode()) == 0 ? true : false;
+        boolean ret = Integer.compare(hashcode, secondObj.hashCode()) == 0 ? true : false;
+        if(!ret)
+            ret = super.compare(secondObj);
+
+        return ret;
     }
 
     @Override
@@ -31,4 +35,30 @@ public class ListElementWithHashCode<E> extends ListElement<E> {
         this.hashcode = hashcode;
     }
 
+    @Override
+    public int hashCode() {
+        return hashcode;
+    }
+
+    // TODO: niekonsekwencja - zmiana działania metody przy nadpisaniu
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) return true;
+        if(obj == null) return false;
+
+        if(getClass() != obj.getClass())
+            return false;
+
+        ListElementWithHashCode<E> le = (ListElementWithHashCode<E>)obj;
+
+        if(getIdentityHC() == le.getIdentityHC())
+            return true;
+
+        if(hashcode == le.hashcode) {
+            return true;
+//            return le.get(false).equals(get(false));
+        }
+
+        return false;
+    }
 }
