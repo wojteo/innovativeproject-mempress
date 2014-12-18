@@ -71,20 +71,29 @@ public class DecisionTree<E> {
                 E obj = null;
                 ListElement<E> tmp = null;
                 SerializerType st = wrappedObj.getData().getSerializerType();
-                int startPoint = -1;
-                for (int i = 0, s = processors.size(); i < s; ++i) {
-                    DecisionTreeElement<E> dce = processors.get(i);
+                int processorNum;
+                for (processorNum = 0; processorNum < processors.size(); ++processorNum) {
+                    DecisionTreeElement<E> dce = processors.get(processorNum);
                     if (!itsTimeToDemote) {
                         if (dce.getOperationType() == st) {
                             itsTimeToDemote = true;
                             obj = wrappedObj.get();
-
+                            break;
                         }
-                    } else {
-                        tmp = processObject(obj, i);
-                        wrappedObj.assign(tmp);
-                        return wrappedObj;
                     }
+                }
+
+                ++processorNum;
+                if(itsTimeToDemote && processorNum < processors.size()) {
+                    DecisionTreeElement<E> dte = processors.get(processorNum);
+                    if(dte.fastForwardAvailable(wrappedObj.getData().getSerializerType())) {
+                        tmp = dte.fastForward(wrappedObj);
+                    } else {
+                        obj = wrappedObj.get(false);
+                        tmp = processObject(obj, processorNum);
+                    }
+                    wrappedObj.assign(tmp);
+                    return wrappedObj;
                 }
             }
         } finally {
@@ -115,6 +124,9 @@ public class DecisionTree<E> {
         public boolean checkConditions(E obj, ObjectDataCarrier metadata);
         public ListElement<E> processObject(E obj, ObjectDataCarrier metadata);
         public SerializerType getOperationType();
+
+        default public boolean fastForwardAvailable(SerializerType from) { return false; }
+        default public ListElement<E> fastForward(ListElement<E> source) { throw new UnsupportedOperationException(); }
     }
 
     public static class ObjectDataCarrier

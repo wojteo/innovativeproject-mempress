@@ -1,11 +1,6 @@
 package mempress;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 public class FileSerializer implements Serializer {
 
@@ -60,4 +55,36 @@ public class FileSerializer implements Serializer {
 		return o;
 	}
 
+	@Override
+	public ClassData fastForward(ClassData o) {
+		byte[] data = (byte[])o.getData();
+		FileOutputStream fos = null;
+		try {
+			String tDir = System.getProperty("user.dir");// java.io.tmpdir");
+			File tFile = File.createTempFile("tmpfile", ".mempress", new File(
+					tDir));
+			tFile.deleteOnExit();
+
+			fos = new FileOutputStream(tFile);
+			fos.write(data);
+
+			return new ClassData(SerializerType.FileSerializer, tFile,0){
+				@Override
+				protected void finalize() {
+					try{
+						((File)getData()).delete();
+					}catch(Exception e){}
+				}
+			};
+		} catch (Exception e) {
+			throw new MempressException("Couldn't serialize file");
+		} finally {
+			if(fos != null) {
+				try {
+					fos.flush();
+					fos.close();
+				} catch (Exception e) {}
+			}
+		}
+	}
 }

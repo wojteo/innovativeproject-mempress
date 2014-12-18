@@ -41,4 +41,9 @@ public class ByteArraySerializer implements Serializer {
 		}
 	}
 
+	@Override
+	public ClassData fastForward(ClassData o) {
+		Object data = o.getData();
+		return ser(data);
+	}
 }

@@ -120,8 +120,8 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
         try {
             data = source.data;
             objectType = source.objectType;
-            useCount = source.useCount;
-            timeCreated = source.timeCreated;
+//            useCount = source.useCount;
+//            timeCreated = source.timeCreated;
         } finally {
             lock.unlock();
         }
@@ -146,4 +146,12 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
         return timeCreated;
     }
 
+    public Class<E> getObjectType() {
+        lock.lock();
+        try {
+            return objectType;
+        } finally {
+            lock.unlock();
+        }
+    }
 }

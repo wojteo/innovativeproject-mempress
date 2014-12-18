@@ -43,4 +43,9 @@ public class ZipByteArraySerializer implements Serializer {
 		}
 	}
 
+	@Override
+	public ClassData fastForward(ClassData o) {
+		Object cd = o.getData();
+		return ser(cd);
+	}
 }

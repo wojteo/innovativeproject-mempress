@@ -32,4 +32,24 @@ public class DecisionSerializeByteArray<E> implements DecisionTreeElement<E> {
 		return SerializerType.ByteArraySerializer;
 	}
 
+	@Override
+	public boolean fastForwardAvailable(SerializerType from) {
+		if(from == SerializerType.NoSerialized)
+			return true;
+		else
+			return false;
+	}
+
+	@Override
+	public ListElement<E> fastForward(ListElement<E> source) {
+		if(source.getData().getSerializerType() != SerializerType.NoSerialized)
+			throw new UnsupportedOperationException();
+		source.lock.lock();
+		try {
+			ClassData classData = SerializerFactory.createSerializer(SerializerType.ByteArraySerializer).fastForward(source.getData());
+			return new ListElement<>(classData, source.getObjectType());
+		} finally {
+			source.lock.unlock();
+		}
+	}
 }
