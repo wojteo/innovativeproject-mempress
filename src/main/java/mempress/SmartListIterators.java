@@ -42,7 +42,8 @@ public class SmartListIterators {
         private final SmartList<T> smartList;
         private int index = -1;
         private int prepareInAdv;
-        private LinkedList<Future<T>> buffer;
+//        private LinkedList<Future<T>> buffer;
+        private ArrayDeque<Future<T>> buffer;
         protected ExecutorService tasks;
 
         public PreloadIterator(SmartList<T> sl) {
@@ -60,8 +61,10 @@ public class SmartListIterators {
             Preconditions.checkArgument(startIndex >= 0 && startIndex < smartList.size());
             index = startIndex - 1;
             prepareInAdv = prepareObjectsInAdvance;
-            buffer = new LinkedList<>();
+//            buffer = new LinkedList<>();
+            buffer = new ArrayDeque<>(prepareInAdv + 1);
             tasks = Executors.newFixedThreadPool(Math.min(3, prepareObjectsInAdvance));
+
         }
 
         @Override
@@ -78,7 +81,8 @@ public class SmartListIterators {
             prepareNextElements(Math.max(prepareInAdv - buffer.size(), 0));
 
             try {
-                T obj = buffer.removeFirst().get();
+//                T obj = buffer.removeFirst().get();
+                T obj = buffer.poll().get();
                 index = tmp;
                 return obj;
             } catch (Exception e) {
@@ -98,8 +102,12 @@ public class SmartListIterators {
 
                 FutureTask<T> ft = new FutureTask<>(() -> smartList.get(pos));
 
+
                 tasks.submit(ft);
-                buffer.addLast(ft);
+//                new Thread(ft).start();
+//                buffer.addLast(ft);
+//                buffer.offer(ft);
+                buffer.add(ft);
             }
         }
     }
