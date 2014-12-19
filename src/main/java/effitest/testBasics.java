@@ -102,7 +102,7 @@ public class testBasics{
 		//int slip=3600;
 		int i;
 		
-
+		Stopwatch swMain = Stopwatch.createStarted();
 		
 		
 		//files in format sampleX.txt where X is in[1, liczba_plikow]
@@ -180,8 +180,8 @@ public class testBasics{
 		}
 		//START writing configuration to CSV file
 				try{
-					writer.append("weightLimit,filesQuantity,operationsQuantity,seed,filseDir,List\n").flush();
-					writer.append(weightLimit+","+liczba_plikow+","+addQ+","+seed1+","+filesDir+",");
+					writer.append("weightLimit,filesQuantity,operationsQuantity,seed,filesDir,,,addsAvg,getAvg,remAvg,runtime,List\n").flush();
+					writer.append(weightLimit+","+liczba_plikow+","+addQ+","+seed1+","+filesDir+",,,=A"+(4*addQ+7)+",=B"+(4*addQ+7)+",=C"+(4*addQ+7)+",=D"+(4*addQ+7)+",");
 						if(whichList.equals("0")){
 							writer.append("Array");
 						}else if(whichList.equals("1")){
@@ -460,11 +460,18 @@ public class testBasics{
 			System.out.println("\nDetailed measures saved in " + csv.getName()+" file");
 		}
 //FINISH tests		
-		try{
-			writer.append("\n addsAvg,getAvg,remAvg\n"
-					+ nanoTime(timeAdd/countAdd)+","+nanoTime(timeGet/countGet)+","+nanoTime(timeRem/countRem)).flush();
-		}catch(Exception e){}
+
+		swMain.stop();
 		
+		try{
+			writer.append("\n addsAvg,getAvg,remAvg,runtime\n"
+					+ nanoTime(timeAdd/countAdd)+","+nanoTime(timeGet/countGet)+","
+					+nanoTime(timeRem/countRem)+","+nanoTime(swMain.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)))
+					.flush();
+		}catch(IOException e){}
+		
+		
+		System.out.println("Program was running for (seconds): " + nanoTime(swMain.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)));
 		System.out.println("Press enter for GC");
 		co.readLine();
 		System.gc();
