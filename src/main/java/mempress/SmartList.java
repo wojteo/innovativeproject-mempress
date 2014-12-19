@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Klasa listy; DO NAPISANIA
@@ -599,7 +600,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     class WeightLimitListener implements Observer {
-
+//        boolean started = false;
+        ReentrantLock lock = new ReentrantLock();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         @Override
@@ -607,16 +609,26 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             long l = ((ObservableLong)arg).get();
 
             final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
-            if(l > calculatedLimit) {
+            if(l > calculatedLimit /*&& !started*/) {
 //                executorService.submit(() -> {
 //                    tryToShrink(calculatedLimit);
 //                });
-                _listTasks.submit(() -> tryToShrink(calculatedLimit));
+//                started = true;
+                _listTasks.submit(() -> {
+                    lock.lock();
+                    try {
+                        tryToShrink(calculatedLimit);
+                    } finally {
+                        lock.unlock();
+                    }
+                });
             }
         }
 
         private void tryToShrink(long newVal) {
             long recoveredSpace = 0;
+            if(newVal >= currentWeight.get())
+                return;
             boolean breakOuterLoop = false;
             for(int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
                 for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0 ; --counter) {
@@ -629,7 +641,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                 }
             }
 
-            currentWeight.subtract(recoveredSpace);
+            System.out.println("Recovered space: " + recoveredSpace);
+//            started = true;
+//            currentWeight.subtract(recoveredSpace);
+            currentWeight.subtractWithoutNotify(recoveredSpace);
         }
     }
 

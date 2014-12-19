@@ -172,7 +172,7 @@ public class SmartListTest {
     @Test
     public void testWeightListener() {
         SmartList<SerializableClass> serializableClassSmartList = SmartListBuilder.<SerializableClass>create()
-                .weightLimit(1)
+                .weightLimit(70)
                 .decisionTree(DecisionTreeBuilder.<SerializableClass>create()
                         .addTreeElement(new DecisionStoreIt<>()).addTreeElement(new DecisionSerializeFile<>()).build())
                 .build();
@@ -180,12 +180,12 @@ public class SmartListTest {
         serializableClassSmartList.addAll(Arrays.asList(serializableClasses));
 
         //try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException(e); }
-        try { serializableClassSmartList.weightLimitListener.executorService.awaitTermination(45, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException(e); }
+        try { serializableClassSmartList.weightLimitListener.executorService.awaitTermination(15, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException(e); }
 
 
 
         for(ListElement<SerializableClass> le : serializableClassSmartList._list)
-            Assert.assertTrue(le.getData().getSerializerType() == SerializerType.FileSerializer);
+            Assert.assertTrue(le.getData().getSerializerType() == SerializerType.FileSerializer || le.getData().getSerializerType() == SerializerType.NoSerialized);
     }
 
     @Test

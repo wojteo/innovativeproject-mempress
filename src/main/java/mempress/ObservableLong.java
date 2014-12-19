@@ -68,4 +68,8 @@ public class ObservableLong {
         value -= v;
         notifyObservers();
     }
+
+    public void subtractWithoutNotify(long v) {
+        value -= v;
+    }
 }
