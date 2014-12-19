@@ -10,6 +10,12 @@ public class MutableListElement<E> extends ListElement<E> {
         super(data, objectType);
     }
 
+    public MutableListElement(ListElement<E> listElement) {
+        super(listElement.getData(), listElement.getObjectType());
+        setUseCount(getUseCount());
+        setIdentityHC(getIdentityHC());
+    }
+
     public void decrementUseCount() {
         --sharedCount;
         if(sharedCount < 0)

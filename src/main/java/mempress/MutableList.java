@@ -8,13 +8,12 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Klasa listy; DO NAPISANIA
- * @param <E>
+ * Created by Bartek on 2014-12-19.
  */
-public class SmartList<E> implements List<E>, Iterable<E> {
-    protected List<ListElement<E>> _list;
+public class MutableList<E> implements List<E> {
+    protected List<MutableListElement<E>> _list;
     protected DecisionTree<E> _decisionTree;
-    private Queue<ListElement<E>> _serializationQueue;
+    private Queue<MutableListElement<E>> _serializationQueue;
     private long weightLimit = 0;
     private ObservableLong currentWeight = new ObservableLong(0, true);
     WeightLimitListener weightLimitListener;
@@ -23,36 +22,48 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     private long timeLimit = 0;
     private ExecutorService _listTasks;
     private static int numOfAttemptsToShrinkList = 3;
-    private static int numOfAttemptsToGetObject = 3;
     public static int numberOfAsyncTask = 5;
 
+    //-------------------------------------------------
+    //  STATYCZNE METODY
+    //-------------------------------------------------
 
-    //--------------------------------------------------------------------
+    public static <T> SharedObject<T> get(MutableList<T> mutableList, int index) {
+        MutableListElement<T> mle = mutableList._list.get(index);
+        mutableList._decisionTree.goBackToHighestState(mle);
+        return new SharedObject<>(mle);
+    }
+
+    public static <T> Iterator<SharedObject<T>> iterator(MutableList<T> mutableList) {
+        Preconditions.checkNotNull(mutableList);
+        return new SimpleIterator<>(mutableList);
+    }
+
+    //-------------------------------------------------
     //  KONSTRUKTORY
-    //--------------------------------------------------------------------
+    //-------------------------------------------------
 
-    protected SmartList() {
+    protected MutableList() {
         this(DecisionTreeBuilder.<E>buildDefaultTree(), -1, -1);
     }
 
-    protected SmartList(long maxWeight) {
+    protected MutableList(long maxWeight) {
         this(DecisionTreeBuilder.<E>buildDefaultTree(), maxWeight, -1);
     }
 
-    protected SmartList(DecisionTree<E> decTree, long maxWeight) {
+    protected MutableList(DecisionTree<E> decTree, long maxWeight) {
         this(decTree, maxWeight, -1);
     }
 
-    protected SmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
+    protected MutableList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
         Preconditions.checkNotNull(decTree);
 
         _decisionTree = decTree;
 
-//        _list = new ArrayList<>();
         _serializationQueue = new PriorityQueue<>();
 
         if(maxWeight > 0 || timeLimit > 0) {
-            _list = Collections.synchronizedList(new ArrayList<ListElement<E>>());
+            _list = Collections.synchronizedList(new ArrayList<MutableListElement<E>>());
             _serializationQueue = new PriorityBlockingQueue<>();
         } else {
             _list = new ArrayList<>();
@@ -62,7 +73,6 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         weightLimit = maxWeight;
 
         if(maxWeight > 0) {
-            //weightLimit = maxWeight;
             currentWeight.addListener((weightLimitListener = new WeightLimitListener()));
         }
 
@@ -75,9 +85,78 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         _listTasks = Executors.newFixedThreadPool(numberOfAsyncTask);
     }
 
-    //----------------------------------------------------------------
-    //  MODYFIKOWANIE ZAWARTOSCI LISTY
-    //----------------------------------------------------------------
+
+    //-------------------------------------------------
+    //  OPERACJE SPECYFICZNE DLA TEGO TYPU
+    //-------------------------------------------------
+
+    protected MutableListElement<E> wrapToListElement(E obj) {
+        Preconditions.checkNotNull(obj);
+
+        ListElement<E> le = null;
+        for (int i = 0; i < numOfAttemptsToShrinkList; ++i)
+            try {
+                le = _decisionTree.processObject(obj);
+                le.setIdentityHC(System.identityHashCode(obj));
+                break;
+            } catch (MempressException me) {
+            }
+
+        return new MutableListElement<E>(le);
+    }
+
+    protected Future<MutableListElement<E>> wrapElementAsync(final E obj) {
+        return _listTasks.submit(() -> wrapToListElement(obj));
+    }
+
+    protected boolean checkConditions(E obj) {
+        return obj instanceof Serializable;
+    }
+
+    protected long demoteElements(int numOfElements) {
+        long releasedBytes = 0;
+        long tmp;
+        for (int i = 0; i < numOfElements; ++i) {
+            try {
+                MutableListElement<E> sle = null;
+                sle = _serializationQueue.poll();
+                if (sle == null) continue;
+
+                tmp = sle.getSize();
+                sle = new MutableListElement<E>(_decisionTree.demote(sle));
+                if (sle == null)
+                    continue;
+                releasedBytes += tmp - sle.getSize();
+
+                _serializationQueue.add(sle);
+
+            } catch (MempressException me) {
+            }
+        }
+
+        return releasedBytes;
+    }
+
+    public long getMaximumWeight() { return weightLimit; }
+
+    public long getCurrentWeight() { return currentWeight.get(); }
+
+    public long getTimeLimit() {
+        return timeLimit;
+    }
+
+    public int getUsesPerCycle() {
+        return usesPerCycle;
+    }
+
+    public void setUsesPerCycle(int usesPerCycle) {
+        this.usesPerCycle = usesPerCycle;
+    }
+
+    //-------------------------------------------------
+    //  MODYFIKACJA ZAWARTOSCI LISTY
+    //-------------------------------------------------
+
     @Override
     public boolean remove(Object o) {
         Preconditions.checkNotNull(o);
@@ -152,7 +231,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         Preconditions.checkNotNull(element);
         Preconditions.checkArgument(checkConditions(element));
         try {
-            ListElement<E> el = wrapElementAsync(element).get(),
+            MutableListElement<E> el = wrapElementAsync(element).get(),
                     old = _list.set(index, el);
 
             _serializationQueue.remove(old);
@@ -170,7 +249,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         Preconditions.checkNotNull(element);
         Preconditions.checkArgument(checkConditions(element));
         try {
-            ListElement<E> el = wrapElementAsync(element).get();
+            MutableListElement<E> el = wrapElementAsync(element).get();
             if (el == null) return;
             _list.add(index, el);
             _serializationQueue.add(el);
@@ -200,11 +279,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
      */
     @Override
     public E get(int index) {
-        ListElement<E> sle = _list.get(index);
-
-        _decisionTree.goBackToHighestState(sle);
-        E obj = sle.get();
-        return obj;
+        throw new UnsupportedOperationException("Unsupported operation. Use MutableList.get instead.");
     }
 
     @Override
@@ -212,7 +287,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         Preconditions.checkNotNull(e);
         Preconditions.checkArgument(checkConditions(e));
         try {
-            ListElement<E> element = wrapElementAsync(e).get();
+            MutableListElement<E> element = wrapElementAsync(e).get();
             if (element == null) return false;
             boolean ret = _list.add(element);
 
@@ -272,6 +347,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         _list.clear();
         _serializationQueue.clear();
     }
+
 
     //----------------------------------------------------------------
     //  ROZMIARY, POJEMNOSC ITP.
@@ -359,17 +435,17 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     @Override
     public Iterator<E> iterator() {
-        return new SimpleIterator();
+        throw new UnsupportedOperationException("Unsupported operation. Use MutableList.iterator instead.");
     }
 
     @Override
     public ListIterator<E> listIterator() {
-        return new SimpleListIterator();
+        throw new UnsupportedOperationException("Unsupported operation. Use MutableList.listIterator instead.");
     }
 
     @Override
     public ListIterator<E> listIterator(int index) {
-        return new SimpleListIterator(index);
+        throw new UnsupportedOperationException("Unsupported operation. Use MutableList.listIterator instead.");
     }
 
     //--------------------------------------------------------------------
@@ -407,212 +483,41 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     public List<E> subList(int fromIndex, int toIndex) {
         Preconditions.checkArgument(!(fromIndex < 0 || toIndex > size() || fromIndex > toIndex));
 
-        SmartList<E> sl = new SmartList<>(_decisionTree, weightLimit, TimeUnit.MILLISECONDS.convert(timeLimit, TimeUnit.NANOSECONDS));
+        MutableList<E> ml = new MutableList<>(_decisionTree, weightLimit, TimeUnit.MILLISECONDS.convert(timeLimit, TimeUnit.NANOSECONDS));
         final long[] weight = {0};
         _list.stream()
                 .skip(fromIndex)
                 .limit(toIndex - fromIndex)
                 .forEach(el -> {
-                    sl._list.add(el);
-                    sl._serializationQueue.add(el);
+                    ml._list.add(el);
+                    ml._serializationQueue.add(el);
                     weight[0] += el.getSize();
                 });
 
-        if(sl.weightLimitListener != null)
-            sl.currentWeight.setValue(weight[0]);
+        if(ml.weightLimitListener != null)
+            ml.currentWeight.setValue(weight[0]);
 
-        return sl;
+        return ml;
     }
+
     //--------------------------------------------------------------------
     // METODY ZWIĄZANE Z FUNKCJONALNOSCIĄ LISTY ORAZ METODY SPOZA List<E>
     //--------------------------------------------------------------------
 
-    // TODO: Dokończyć pisanie
-    protected long demoteElements(int numOfElements) {
-        long releasedBytes = 0;
-        long tmp;
-        for(int i = 0; i < numOfElements; ++i) {
-            try {
-                ListElement<E> sle = null;
-                sle = _serializationQueue.poll();
-                if (sle == null) continue;
 
-                    tmp = sle.getSize();
-                    sle = _decisionTree.demote(sle);
-                    if (sle == null)
-                        continue;
-                    releasedBytes += tmp - sle.getSize();
-
-                _serializationQueue.add(sle);
-
-            } catch (MempressException me) {
-//                System.err.println("Przechwycono wyjatek: " + me.getMessage());
-            }
-        }
-
-        return releasedBytes;
-    }
-
-    /**
-     * Ta metoda TYLKO dostarcza element do dodania. Dodawanie do listy nie może się tutaj znaleźć
-     * @param obj
-     * @return ListElement opakowujacy obiekt. MOZE ZWROCIC NULL!
-     */
-    protected ListElement<E> wrapToListElement(E obj) {
-        Preconditions.checkNotNull(obj);
-
-        ListElement<E> listElement = null;
-
-        for (int i = 0; i < numOfAttemptsToShrinkList; ++i)
-            try {
-                listElement = _decisionTree.processObject(obj);
-                listElement.setIdentityHC(System.identityHashCode(obj));
-                break;
-            } catch (MempressException me) {
-            }
-
-        return listElement;
-    }
-
-    private Future<ListElement<E>> wrapElementAsync(final E obj) {
-        return _listTasks.submit(() -> wrapToListElement(obj));
-    }
-
-    protected boolean checkConditions(E obj) {
-        boolean pred = true;
-
-        pred = pred && obj instanceof Serializable;
-        pred = pred && obj instanceof Immutable;
-
-//        if(!pred)
-//            throw new IllegalArgumentException("Given object is not serializable or immutable");
-        return pred;
-    }
-
-    public long getMaximumWeight() { return weightLimit; }
-
-    public long getCurrentWeight() { return currentWeight.get(); }
-
-    public long getTimeLimit() {
-        return timeLimit;
-    }
-
-    public int getUsesPerCycle() {
-        return usesPerCycle;
-    }
-
-    public void setUsesPerCycle(int usesPerCycle) {
-        this.usesPerCycle = usesPerCycle;
-    }
-
-    //--------------------------------------------------------------------
+    //---------------------------------------------------
     // KLASY WEWNETRZNE
-    //--------------------------------------------------------------------
-
-    protected class SimpleIterator implements Iterator<E> {
-        private int index = -1;
-
-        @Override
-        public boolean hasNext() {
-            return index + 1 < _list.size();
-        }
-
-        @Override
-        public E next() {
-            int tmp = index + 1;
-            if(tmp >= _list.size()) throw new NoSuchElementException();
-            index = tmp;
-            return get(tmp);
-        }
-
-        @Override
-        public void remove() {
-            SmartList.this.remove(index);
-        }
-    }
-
-    protected class SimpleListIterator implements ListIterator<E> {
-        private int index;
-
-        public SimpleListIterator() {
-            index = -1;
-        }
-
-        public SimpleListIterator(int index) {
-            if(index < 0 || index > _list.size())
-                throw new IndexOutOfBoundsException();
-            this.index = index - 1;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return index + 1 < _list.size();
-        }
-
-        @Override
-        public E next() {
-            int tmp = index + 1;
-            if(tmp >= _list.size()) throw new NoSuchElementException();
-            index = tmp;
-            return get(tmp);
-        }
-
-        @Override
-        public boolean hasPrevious() {
-            int tmp = index - 1;
-            return tmp >= 0 && tmp < _list.size();
-        }
-
-        @Override
-        public E previous() {
-            int tmp = index - 1;
-            if(!(tmp >= 0 && tmp < _list.size()))
-                throw new NoSuchElementException();
-            index = tmp;
-            return get(tmp);
-        }
-
-        @Override
-        public int nextIndex() {
-            return Math.min(index + 1, _list.size());
-        }
-
-        @Override
-        public int previousIndex() {
-            return Math.max(index - 1, _list.size());
-        }
-
-        @Override
-        public void remove() {
-            SmartList.this.remove(index);
-        }
-
-        @Override
-        public void set(E e) {
-            SmartList.this.set(index, e);
-        }
-
-        @Override
-        public void add(E e) {
-            SmartList.this.add(index++, e);
-        }
-    }
+    //---------------------------------------------------
 
     class WeightLimitListener implements Observer {
-//        boolean started = false;
         ReentrantLock lock = new ReentrantLock();
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         @Override
         public void update(Observable o, Object arg) {
             long l = ((ObservableLong)arg).get();
 
             final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
-            if(l > calculatedLimit /*&& !started*/) {
-//                executorService.submit(() -> {
-//                    tryToShrink(calculatedLimit);
-//                });
-//                started = true;
+            if(l > calculatedLimit) {
                 _listTasks.submit(() -> {
                     lock.lock();
                     try {
@@ -640,9 +545,6 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                 }
             }
 
-//            System.out.println("Recovered space: " + recoveredSpace);
-//            started = true;
-//            currentWeight.subtract(recoveredSpace);
             currentWeight.subtractWithoutNotify(recoveredSpace);
         }
     }
@@ -655,12 +557,35 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             _list.forEach(le -> {
                 long diff = System.nanoTime() - le.getTimeCreated();
                 int useC = le.getUseCount();
-                if(useC == 0 || diff / useC > usesPerCycle * timeLimit) {
+                if(useC == 0 || (useC == 0 && diff > 2 * timeLimit) || diff / useC > usesPerCycle * timeLimit) {
                     try {
                         _decisionTree.demote(le);
                     } catch (MempressException e) {}
                 }
             });
+        }
+    }
+
+    static class SimpleIterator<T> implements Iterator<SharedObject<T>> {
+        private final MutableList<T> _list;
+        private int index = -1;
+
+        public SimpleIterator(MutableList<T> ml) {
+            Preconditions.checkNotNull(ml);
+            _list = ml;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index + 1 < _list.size();
+        }
+
+        @Override
+        public SharedObject<T> next() {
+            int tmp = index + 1;
+            if(tmp >= _list.size()) throw new NoSuchElementException();
+            index = tmp;
+            return MutableList.get(_list, index);
         }
     }
 }

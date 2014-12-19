@@ -111,6 +111,7 @@ public class DecisionTree<E> {
 
         E obj = wrappedObj.get();
         int uc = wrappedObj.getUseCount();
+        //long tmcr = wrappedObj.getTimeCreated();
 
         ListElement<E> firstStateElem = processObject(obj);
         firstStateElem.setUseCount(uc);
