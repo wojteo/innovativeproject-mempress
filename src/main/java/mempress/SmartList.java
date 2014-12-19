@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Klasa listy; DO NAPISANIA
@@ -24,8 +21,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     private Timer cycleTimer;
     private int usesPerCycle = 1;
     private long timeLimit = 0;
+    private ExecutorService _listTasks;
     private static int numOfAttemptsToShrinkList = 3;
     private static int numOfAttemptsToGetObject = 3;
+    public static int numberOfAsyncTask = 5;
 
 
     //--------------------------------------------------------------------
@@ -72,6 +71,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             cycleTimer.schedule(new DemoteTimer(), timeLimit);
             this.timeLimit = TimeUnit.NANOSECONDS.convert(timeLimit, TimeUnit.MILLISECONDS);
         }
+
+        _listTasks = Executors.newFixedThreadPool(numberOfAsyncTask);
     }
 
     //----------------------------------------------------------------
@@ -96,7 +97,14 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         final int[] addedElem = {0};
 
         c.stream().filter(this::checkConditions)
-                .map(obj -> wrapToListElement(obj))
+                .map(obj -> {
+                    try {
+                        return wrapElementAsync(obj).get();
+                    } catch (Exception e) {
+                        System.err.println(e.getMessage());
+                        return null;
+                    }
+                })
                 .forEach(le -> {
                     if(le == null)
                         return;
@@ -118,7 +126,14 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         final int[] addedElem = { 0 };
 
         c.stream().filter(this::checkConditions)
-                .map(obj -> wrapToListElement(obj))
+                .map(obj -> {
+                    try {
+                        return wrapElementAsync(obj).get();
+                    } catch (Exception e) {
+                        System.err.println(e.getMessage());
+                        return null;
+                    }
+                })
                 .forEach(le -> {
                     if(le == null)
                         return;
@@ -136,24 +151,33 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     public E set(int index, E element) {
         Preconditions.checkNotNull(element);
         Preconditions.checkArgument(checkConditions(element));
-        ListElement<E> el = wrapToListElement(element),
-                old = _list.set(index, el);
+        try {
+            ListElement<E> el = wrapElementAsync(element).get(),
+                    old = _list.set(index, el);
 
-        _serializationQueue.remove(old);
-        currentWeight.subtract(old.getSize());
-        currentWeight.add(el.getSize());
-        return old.get();
+            _serializationQueue.remove(old);
+            currentWeight.subtract(old.getSize());
+            currentWeight.add(el.getSize());
+            return old.get();
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return null;
+        }
     }
 
     @Override
     public void add(int index, E element) {
         Preconditions.checkNotNull(element);
         Preconditions.checkArgument(checkConditions(element));
-        ListElement<E> el = wrapToListElement(element);
-        if(el == null) return;
-        _list.add(index, el);
-        _serializationQueue.add(el);
-        currentWeight.add(el.getSize());
+        try {
+            ListElement<E> el = wrapElementAsync(element).get();
+            if (el == null) return;
+            _list.add(index, el);
+            _serializationQueue.add(el);
+            currentWeight.add(el.getSize());
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 
     @Override
@@ -187,14 +211,19 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     public boolean add(E e) {
         Preconditions.checkNotNull(e);
         Preconditions.checkArgument(checkConditions(e));
-        ListElement<E> element = wrapToListElement(e);
-        if(element == null) return false;
-        boolean ret = _list.add(element);
+        try {
+            ListElement<E> element = wrapElementAsync(e).get();
+            if (element == null) return false;
+            boolean ret = _list.add(element);
 
-        ret = ret && _serializationQueue.add(element);
+            ret = ret && _serializationQueue.add(element);
 
-        currentWeight.add(element.getSize());
-        return ret;
+            currentWeight.add(element.getSize());
+            return ret;
+        } catch (InterruptedException | ExecutionException ex) {
+            System.err.println(ex.getMessage());
+            return false;
+        }
     }
 
     @Override
@@ -445,6 +474,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return listElement;
     }
 
+    private Future<ListElement<E>> wrapElementAsync(final E obj) {
+        return _listTasks.submit(() -> wrapToListElement(obj));
+    }
+
     protected boolean checkConditions(E obj) {
         boolean pred = true;
 
@@ -575,9 +608,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
             final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
             if(l > calculatedLimit) {
-                executorService.submit(() -> {
-                    tryToShrink(calculatedLimit);
-                });
+//                executorService.submit(() -> {
+//                    tryToShrink(calculatedLimit);
+//                });
+                _listTasks.submit(() -> tryToShrink(calculatedLimit));
             }
         }
 
