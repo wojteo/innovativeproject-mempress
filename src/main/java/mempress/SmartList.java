@@ -641,7 +641,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                 }
             }
 
-            System.out.println("Recovered space: " + recoveredSpace);
+//            System.out.println("Recovered space: " + recoveredSpace);
 //            started = true;
 //            currentWeight.subtract(recoveredSpace);
             currentWeight.subtractWithoutNotify(recoveredSpace);

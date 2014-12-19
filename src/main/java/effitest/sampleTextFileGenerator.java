@@ -1,3 +1,4 @@
+package effitest;
 import java.io.*;
 import java.util.Random;
 
