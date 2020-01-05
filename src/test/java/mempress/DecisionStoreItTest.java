@@ -1,14 +1,11 @@
 package mempress;
 
-import mempress.*;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Serializable;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Created by Bartek on 2014-11-28.
@@ -43,7 +40,7 @@ public class DecisionStoreItTest {
         int num = 47;
         _sClass.setNo(num);
         sctmp = _decision1.processObject(_sClass, _odc);
-        assertTrue(sctmp.get().getNo() == num);
+        assertEquals(sctmp.get().getNo(), num);
 
         try {
             nsctmp = _decision2.processObject(_nsClass, _odc);
@@ -55,7 +52,7 @@ public class DecisionStoreItTest {
 
     @Test
     public void testGetOperationType() {
-        assertTrue(_decision1.getOperationType() == SerializerType.NoSerialized);
+        assertSame(_decision1.getOperationType(), SerializerType.NoSerialized);
     }
 
     private static class SerializableClass implements Serializable {

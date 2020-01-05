@@ -16,14 +16,14 @@ public class SharedObject<E> {
     }
 
     public E get() throws IllegalAccessException {
-        if(!blocked)
+        if (!blocked)
             return sharedObject.getShared();
         else
             throw new IllegalAccessException();
     }
 
     public void release() {
-        if(!blocked) {
+        if (!blocked) {
             blocked = true;
             sharedObject.decrementUseCount();
         }

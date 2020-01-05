@@ -44,7 +44,7 @@ public class SmartListBuilder<E> {
         Preconditions.checkArgument(tl > 0, "Time limit must be greater than zero");
         Preconditions.checkArgument(minUsePerCycle > 0);
         long millis = TimeUnit.MILLISECONDS.convert(tl, unit);
-        if(millis == 0) millis = 1;
+        if (millis == 0) millis = 1;
         _stateTimeLimit = millis;
         _minUsePerCycle = minUsePerCycle;
         return this;
@@ -57,18 +57,18 @@ public class SmartListBuilder<E> {
 
     public SmartList<E> build() {
         SmartList<E> tmp = null;
-        if(_decisionTree == null)
+        if (_decisionTree == null)
             _decisionTree = DecisionTreeBuilder.buildDefaultTree();
-        if(_elementsProvideHashCode) {
+        if (_elementsProvideHashCode) {
             tmp = new HashCodeSmartList<E>(_decisionTree, _weightLimit, _stateTimeLimit);
         } else {
             tmp = new SmartList<E>(_decisionTree, _weightLimit, _stateTimeLimit);
         }
 
-        if(!_allowNonImmutableObjects)
+        if (!_allowNonImmutableObjects)
             tmp = new ImmutableDecorator<E>().decorate(tmp);
 
-        if(_minUsePerCycle != 0)
+        if (_minUsePerCycle != 0)
             tmp.setUsesPerCycle(_minUsePerCycle);
 
         return tmp;

@@ -1,11 +1,7 @@
 package mempress;
 
-import mempress.*;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.Serializable;
 
 import static org.junit.Assert.*;
 
@@ -42,17 +38,18 @@ public class DecisionSerializeByteArrayTest {
         int num = 47;
         _sClass.setNo(num);
         sctmp = _decision1.processObject(_sClass, _odc);
-        assertTrue(sctmp.get().getNo() == num);
+        assertEquals(sctmp.get().getNo(), num);
 
         try {
             nsctmp = _decision2.processObject(_nsClass, _odc);
             fail();
-        } catch (MempressException ex) {}
+        } catch (MempressException ex) {
+        }
     }
 
     @Test
     public void testGetOperationType() {
-        assertTrue(_decision1.getOperationType() == SerializerType.ByteArraySerializer);
+        assertSame(_decision1.getOperationType(), SerializerType.ByteArraySerializer);
     }
 
 

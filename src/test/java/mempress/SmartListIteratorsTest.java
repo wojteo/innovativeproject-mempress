@@ -4,13 +4,12 @@ import com.google.common.base.Preconditions;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.security.spec.ECField;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
 /**
  * Created by Bartek on 2014-12-02.
  */
@@ -47,12 +46,12 @@ public class SmartListIteratorsTest {
         return new SerializableClass(n);
     }
 
-//    @Test
+    //    @Test
     public void testPreloadIterator() {
 //        try { Thread.sleep(10000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
 
         _testedList.demoteElements(3);
-        SmartListIterators.PreloadIterator<SerializableClass> it = (SmartListIterators.PreloadIterator<SerializableClass>) SmartListIterators.<SerializableClass>makePreloadIterator(_testedList, 0, 3);
+        SmartListIterators.PreloadIterator<SerializableClass> it = (SmartListIterators.PreloadIterator<SerializableClass>) SmartListIterators.makePreloadIterator(_testedList, 0, 3);
 
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(0).getData().getSerializerType());
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(1).getData().getSerializerType());
@@ -61,7 +60,11 @@ public class SmartListIteratorsTest {
         it.next();
 //        try { Thread.sleep(20000); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
 //        while(!it.tasks.isTerminated());
-        try { it.tasks.awaitTermination(45, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException("Exception occured during testing.", e); }
+        try {
+            it.tasks.awaitTermination(45, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception occured during testing.", e);
+        }
 
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(1).getData().getSerializerType());
         assertEquals(SerializerType.NoSerialized, _testedList._list.get(2).getData().getSerializerType());
@@ -70,7 +73,7 @@ public class SmartListIteratorsTest {
     @Test
     public void testPreloadIterator2() {
         _testedList.demoteElements(3);
-        SmartListIterators.PreloadIterator<SerializableClass> it = (SmartListIterators.PreloadIterator<SerializableClass>) SmartListIterators.<SerializableClass>makePreloadIterator(_testedList, 0, 3);
+        SmartListIterators.PreloadIterator<SerializableClass> it = (SmartListIterators.PreloadIterator<SerializableClass>) SmartListIterators.makePreloadIterator(_testedList, 0, 3);
 
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(0).getData().getSerializerType());
         assertEquals(SerializerType.ByteArraySerializer, _testedList._list.get(1).getData().getSerializerType());
@@ -89,15 +92,14 @@ public class SmartListIteratorsTest {
 
         @Override
         public ListElement<E> processObject(E obj, DecisionTree.ObjectDataCarrier metadata) {
-            Class<E> objType = (Class<E>)obj.getClass();
+            Class<E> objType = (Class<E>) obj.getClass();
 
             Serializer pser = SerializerFactory.createSerializer(SerializerType.NoSerialized);
             ClassData cd = pser.ser(obj);
 
 //		ListElement<E> elem = new WrappedListElement<E>(cd, hash, objType);
             ClassData cd2 = new ClassData(cd.getSerializerType(), cd.getData(), Long.MAX_VALUE);
-            ListElement<E> elem = new ListElement<>(cd2, objType);
-            return elem;
+            return new ListElement<>(cd2, objType);
         }
 
         @Override

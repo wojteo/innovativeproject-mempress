@@ -1,10 +1,12 @@
 package mempress;
 
 public interface Serializer {
-	
-	public ClassData ser(Object obj);
-	
-	public Object des(ClassData cd);
 
-	default public ClassData fastForward(ClassData o) { throw new UnsupportedOperationException(); }
+    ClassData ser(Object obj);
+
+    Object des(ClassData cd);
+
+    default ClassData fastForward(ClassData o) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }

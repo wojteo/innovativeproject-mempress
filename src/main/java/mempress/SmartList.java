@@ -9,22 +9,22 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Klasa listy; DO NAPISANIA
+ *
  * @param <E>
  */
 public class SmartList<E> implements List<E>, Iterable<E> {
-    protected List<ListElement<E>> _list;
-    protected DecisionTree<E> _decisionTree;
+    protected final List<ListElement<E>> _list;
+    protected final DecisionTree<E> _decisionTree;
     private Queue<ListElement<E>> _serializationQueue;
     private long weightLimit = 0;
-    private ObservableLong currentWeight = new ObservableLong(0, true);
+    private final ObservableLong currentWeight = new ObservableLong(0, true);
     WeightLimitListener weightLimitListener;
-    private Timer cycleTimer;
     private int usesPerCycle = 1;
     private long timeLimit = 0;
-    private ExecutorService _listTasks;
-    private static int numOfAttemptsToShrinkList = 3;
+    private final ExecutorService _listTasks;
+    private static final int numOfAttemptsToShrinkList = 3;
     private static int numOfAttemptsToGetObject = 3;
-    public static int numberOfAsyncTask = 5;
+    public static final int numberOfAsyncTask = 5;
 
 
     //--------------------------------------------------------------------
@@ -51,7 +51,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 //        _list = new ArrayList<>();
         _serializationQueue = new PriorityQueue<>();
 
-        if(maxWeight > 0 || timeLimit > 0) {
+        if (maxWeight > 0 || timeLimit > 0) {
             _list = Collections.synchronizedList(new ArrayList<ListElement<E>>());
             _serializationQueue = new PriorityBlockingQueue<>();
         } else {
@@ -61,13 +61,13 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
         weightLimit = maxWeight;
 
-        if(maxWeight > 0) {
+        if (maxWeight > 0) {
             //weightLimit = maxWeight;
             currentWeight.addListener((weightLimitListener = new WeightLimitListener()));
         }
 
-        if(timeLimit > 0) {
-            cycleTimer = new Timer();
+        if (timeLimit > 0) {
+            Timer cycleTimer = new Timer();
             cycleTimer.schedule(new DemoteTimer(), timeLimit);
             this.timeLimit = TimeUnit.NANOSECONDS.convert(timeLimit, TimeUnit.MILLISECONDS);
         }
@@ -82,8 +82,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     public boolean remove(Object o) {
         Preconditions.checkNotNull(o);
         boolean found = false;
-        for(int i = 0; i < size(); ++i)
-            if(_list.get(i).compare(o)) {
+        for (int i = 0; i < size(); ++i)
+            if (_list.get(i).compare(o)) {
                 _list.remove(i);
                 found = true;
             }
@@ -106,13 +106,13 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     }
                 })
                 .forEach(le -> {
-                    if(le == null)
+                    if (le == null)
                         return;
                     boolean prev = true;
                     prev = prev && _list.add(le);
                     prev = prev && _serializationQueue.add(le);
                     currentWeight.add(le.getSize());
-                    if(prev) addedElem[0]++;
+                    if (prev) addedElem[0]++;
                 });
 
         return addedElem[0] > 0;
@@ -122,8 +122,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     public boolean addAll(int index, Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
 
-        final int[] shift = { index };
-        final int[] addedElem = { 0 };
+        final int[] shift = {index};
+        final int[] addedElem = {0};
 
         c.stream().filter(this::checkConditions)
                 .map(obj -> {
@@ -135,7 +135,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     }
                 })
                 .forEach(le -> {
-                    if(le == null)
+                    if (le == null)
                         return;
                     _list.add(shift[0]++, le);
                     _serializationQueue.add(le);
@@ -184,7 +184,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     public E remove(int index) {
         ListElement<E> el = _list.remove(index);
 
-        if(el == null)
+        if (el == null)
             return null;
         E obj = el.get();
         _serializationQueue.remove(el);
@@ -195,16 +195,13 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     /**
      * Od momentu odczytania elementu, jest on trzymany w formie zdekodowanej
-     * @param index
-     * @return
      */
     @Override
     public E get(int index) {
         ListElement<E> sle = _list.get(index);
 
         _decisionTree.goBackToHighestState(sle);
-        E obj = sle.get();
-        return obj;
+        return sle.get();
     }
 
     @Override
@@ -229,23 +226,22 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     @Override
     public boolean removeAll(Collection<?> c) {
         boolean modified = false;
-        for(int i = 0; i < _list.size(); ++i) {
+        for (int i = 0; i < _list.size(); ++i) {
             ListElement<E> le = _list.get(i);
             int hc = le.getIdentityHC();
             E obj = null;
-            for(Object o : c) {
-                if(System.identityHashCode(o) == hc) {
-                    if(remove(i--) != null) {
+            for (Object o : c) {
+                if (System.identityHashCode(o) == hc) {
+                    if (remove(i--) != null) {
                         modified = true;
                     }
                     break;
-                }
-                else {
-                    if(obj == null) {
+                } else {
+                    if (obj == null) {
                         obj = le.get(false);
                     }
-                    if(obj.equals(o)) {
-                        if(remove(i--) != null) {
+                    if (obj.equals(o)) {
+                        if (remove(i--) != null) {
                             modified = true;
                         }
                         break;
@@ -259,12 +255,13 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     /**
      * Niezaimplementowane
+     *
      * @param c
      * @return
      */
     @Override
     public boolean retainAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
@@ -300,9 +297,9 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         Preconditions.checkNotNull(c);
         Preconditions.checkArgument(colsize > 0);
 
-        for(ListElement<E> sle : _list) {
-            for(Object o : c) {
-                if(sle.compare(o))
+        for (ListElement<E> sle : _list) {
+            for (Object o : c) {
+                if (sle.compare(o))
                     ++counter;
             }
         }
@@ -323,8 +320,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     @Override
     public int indexOf(Object o) {
         int size = size();
-        for(int i = 0; i < size; ++i) {
-            if(_list.get(i).compare(o))
+        for (int i = 0; i < size; ++i) {
+            if (_list.get(i).compare(o))
                 return i;
         }
 
@@ -334,8 +331,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     @Override
     public int lastIndexOf(Object o) {
         Preconditions.checkNotNull(o);
-        for(int i = size() - 1; i >= 0; --i) {
-            if(_list.get(i).compare(o))
+        for (int i = size() - 1; i >= 0; --i) {
+            if (_list.get(i).compare(o))
                 return i;
         }
 
@@ -345,8 +342,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     @Override
     public boolean contains(Object o) {
 
-        for(ListElement<E> sle : _list) {
-            if(sle.compare(o))
+        for (ListElement<E> sle : _list) {
+            if (sle.compare(o))
                 return true;
         }
 
@@ -380,7 +377,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     public Object[] toArray() {
         int size = size();
         Object[] array = new Object[size()];
-        for(int i = 0; i < size; ++i)
+        for (int i = 0; i < size; ++i)
             array[i] = _list.get(i).get();
         return array;
     }
@@ -389,8 +386,8 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
         Preconditions.checkNotNull(a);
-        if(a.length < size()) {
-            return (T[])Arrays.copyOf(toArray(), size(), a.getClass());
+        if (a.length < size()) {
+            return (T[]) Arrays.copyOf(toArray(), size(), a.getClass());
         } else {
             System.arraycopy(toArray(), 0, a, 0, size());
             return a;
@@ -399,6 +396,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     /**
      * Zwraca fragment SmartListy. Fragment też jest typu SmartList
+     *
      * @param fromIndex indeks pierwszego elementu do skopiowania
      * @param toIndex
      * @return
@@ -418,7 +416,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     weight[0] += el.getSize();
                 });
 
-        if(sl.weightLimitListener != null)
+        if (sl.weightLimitListener != null)
             sl.currentWeight.setValue(weight[0]);
 
         return sl;
@@ -431,17 +429,17 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     protected long demoteElements(int numOfElements) {
         long releasedBytes = 0;
         long tmp;
-        for(int i = 0; i < numOfElements; ++i) {
+        for (int i = 0; i < numOfElements; ++i) {
             try {
                 ListElement<E> sle = null;
                 sle = _serializationQueue.poll();
                 if (sle == null) continue;
 
-                    tmp = sle.getSize();
-                    sle = _decisionTree.demote(sle);
-                    if (sle == null)
-                        continue;
-                    releasedBytes += tmp - sle.getSize();
+                tmp = sle.getSize();
+                sle = _decisionTree.demote(sle);
+                if (sle == null)
+                    continue;
+                releasedBytes += tmp - sle.getSize();
 
                 _serializationQueue.add(sle);
 
@@ -455,6 +453,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
     /**
      * Ta metoda TYLKO dostarcza element do dodania. Dodawanie do listy nie może się tutaj znaleźć
+     *
      * @param obj
      * @return ListElement opakowujacy obiekt. MOZE ZWROCIC NULL!
      */
@@ -489,9 +488,13 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return pred;
     }
 
-    public long getMaximumWeight() { return weightLimit; }
+    public long getMaximumWeight() {
+        return weightLimit;
+    }
 
-    public long getCurrentWeight() { return currentWeight.get(); }
+    public long getCurrentWeight() {
+        return currentWeight.get();
+    }
 
     public long getTimeLimit() {
         return timeLimit;
@@ -520,7 +523,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         @Override
         public E next() {
             int tmp = index + 1;
-            if(tmp >= _list.size()) throw new NoSuchElementException();
+            if (tmp >= _list.size()) throw new NoSuchElementException();
             index = tmp;
             return get(tmp);
         }
@@ -539,7 +542,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         }
 
         public SimpleListIterator(int index) {
-            if(index < 0 || index > _list.size())
+            if (index < 0 || index > _list.size())
                 throw new IndexOutOfBoundsException();
             this.index = index - 1;
         }
@@ -552,7 +555,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         @Override
         public E next() {
             int tmp = index + 1;
-            if(tmp >= _list.size()) throw new NoSuchElementException();
+            if (tmp >= _list.size()) throw new NoSuchElementException();
             index = tmp;
             return get(tmp);
         }
@@ -566,7 +569,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         @Override
         public E previous() {
             int tmp = index - 1;
-            if(!(tmp >= 0 && tmp < _list.size()))
+            if (!(tmp >= 0 && tmp < _list.size()))
                 throw new NoSuchElementException();
             index = tmp;
             return get(tmp);
@@ -599,16 +602,16 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     }
 
     class WeightLimitListener implements Observer {
-//        boolean started = false;
-        ReentrantLock lock = new ReentrantLock();
+        //        boolean started = false;
+        final ReentrantLock lock = new ReentrantLock();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         @Override
         public void update(Observable o, Object arg) {
-            long l = ((ObservableLong)arg).get();
+            long l = ((ObservableLong) arg).get();
 
             final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
-            if(l > calculatedLimit /*&& !started*/) {
+            if (l > calculatedLimit /*&& !started*/) {
 //                executorService.submit(() -> {
 //                    tryToShrink(calculatedLimit);
 //                });
@@ -626,14 +629,14 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
         private void tryToShrink(long newVal) {
             long recoveredSpace = 0;
-            if(newVal >= currentWeight.get())
+            if (newVal >= currentWeight.get())
                 return;
             boolean breakOuterLoop = false;
-            for(int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
-                for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0 ; --counter) {
+            for (int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
+                for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0; --counter) {
                     recoveredSpace += demoteElements(1);
 
-                    if(newVal >= currentWeight.get() - recoveredSpace) {
+                    if (newVal >= currentWeight.get() - recoveredSpace) {
                         breakOuterLoop = true;
                         break;
                     }
@@ -655,10 +658,11 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             _list.forEach(le -> {
                 long diff = System.nanoTime() - le.getTimeCreated();
                 int useC = le.getUseCount();
-                if(useC == 0 || diff / useC > usesPerCycle * timeLimit) {
+                if (useC == 0 || diff / useC > usesPerCycle * timeLimit) {
                     try {
                         _decisionTree.demote(le);
-                    } catch (MempressException e) {}
+                    } catch (MempressException e) {
+                    }
                 }
             });
         }

@@ -6,10 +6,14 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
+
 /**
  * Created by Bartek on 2014-12-02.
  */
@@ -43,14 +47,14 @@ public class SmartListTest {
     public void testAddAll() {
         assertTrue(_testedList.addAll(_serializableClasses));
 
-        for(int i = 0; i < _serializableClasses.size(); ++i)
+        for (int i = 0; i < _serializableClasses.size(); ++i)
             assertTrue(_testedList.contains(_serializableClasses.get(i)));
     }
 
     @Test
     public void testAddAllInt() {
         assertTrue(_testedList.addAll(0, _serializableClasses));
-        for(int i = 0; i < _serializableClasses.size(); ++i) {
+        for (int i = 0; i < _serializableClasses.size(); ++i) {
             assertTrue(_serializableClasses.contains(_testedList.get(i)));
         }
     }
@@ -77,7 +81,8 @@ public class SmartListTest {
         try {
             _testedList.get(0);
             fail();
-        } catch (IndexOutOfBoundsException e) {}
+        } catch (IndexOutOfBoundsException e) {
+        }
 
         assertTrue(_testedList.isEmpty());
     }
@@ -92,13 +97,15 @@ public class SmartListTest {
         try {
             _serializableClasses.containsAll(null);
             fail();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+        }
 
         _serializableClasses.clear();
         try {
             _testedList.containsAll(_serializableClasses);
             fail();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException e) {
+        }
     }
 
     @Test
@@ -120,7 +127,6 @@ public class SmartListTest {
     }
 
 
-
     @Test
     public void testToArray() {
         SerializableClass[] serializableClasses = _testedList.toArray(new SerializableClass[4]),
@@ -128,7 +134,7 @@ public class SmartListTest {
                 serializableClasses2 = _testedList.toArray(new SerializableClass[3]);
         Object[] objects = _testedList.toArray();
 
-        SerializableClass[] expectedValues = { firstElement, secondElement, thirdElement };
+        SerializableClass[] expectedValues = {firstElement, secondElement, thirdElement};
 
         assertArrayEquals(expectedValues, objects);
         assertArrayEquals(expectedValues, serializableClasses1);
@@ -137,34 +143,36 @@ public class SmartListTest {
         try {
             assertArrayEquals(expectedValues, serializableClasses);
             fail();
-        } catch (AssertionError e ) {}
+        } catch (AssertionError e) {
+        }
 
         try {
             _testedList.toArray(null);
             fail();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+        }
     }
 
     @Test
     public void testIterators() {
         int index = 0;
         SerializableClass[] elements = {firstElement, secondElement, thirdElement};
-        for(SerializableClass sc : _testedList) {
+        for (SerializableClass sc : _testedList) {
             assertEquals(elements[index++], sc);
         }
 
         ListIterator<SerializableClass> it = _testedList.listIterator();
         SerializableClass sc4 = make(4);
-        for(int i = 0; it.hasNext(); ++i) {
+        for (int i = 0; it.hasNext(); ++i) {
             assertEquals(elements[i], it.next());
-            if(i == 1) {
+            if (i == 1) {
                 it.add(sc4);
             }
         }
-        elements = new SerializableClass[] { firstElement, sc4, secondElement, thirdElement };
+        elements = new SerializableClass[]{firstElement, sc4, secondElement, thirdElement};
 
         it = _testedList.listIterator(1);
-        for(int i = 1; it.hasNext(); ++i) {
+        for (int i = 1; it.hasNext(); ++i) {
             assertEquals(elements[i], it.next());
         }
     }
@@ -176,15 +184,18 @@ public class SmartListTest {
                 .decisionTree(DecisionTreeBuilder.<SerializableClass>create()
                         .addTreeElement(new DecisionStoreIt<>()).addTreeElement(new DecisionSerializeFile<>()).build())
                 .build();
-        SerializableClass[] serializableClasses = { make(4), make(5), make(6) };
+        SerializableClass[] serializableClasses = {make(4), make(5), make(6)};
         serializableClassSmartList.addAll(Arrays.asList(serializableClasses));
 
         //try { Thread.sleep(1000); } catch (Exception e) { throw new RuntimeException(e); }
-        try { serializableClassSmartList.weightLimitListener.executorService.awaitTermination(15, TimeUnit.SECONDS); } catch (Exception e) { throw new RuntimeException(e); }
+        try {
+            serializableClassSmartList.weightLimitListener.executorService.awaitTermination(15, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
 
-
-        for(ListElement<SerializableClass> le : serializableClassSmartList._list)
+        for (ListElement<SerializableClass> le : serializableClassSmartList._list)
             Assert.assertTrue(le.getData().getSerializerType() == SerializerType.FileSerializer || le.getData().getSerializerType() == SerializerType.NoSerialized);
     }
 
@@ -198,19 +209,22 @@ public class SmartListTest {
         try {
             list.add(smc);
             fail();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException e) {
+        }
 
         assertTrue(list.add(sic));
 
         try {
             list.set(0, smc);
             fail();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException e) {
+        }
 
         try {
             list.add(0, smc);
             fail();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException e) {
+        }
     }
 
 
@@ -235,7 +249,8 @@ public class SmartListTest {
     private static class SerializableMutableClass implements Serializable {
         private int no = 1;
 
-        public SerializableMutableClass() {}
+        public SerializableMutableClass() {
+        }
 
         public SerializableMutableClass(int no) {
             this.no = no;
@@ -256,9 +271,7 @@ public class SmartListTest {
 
             SerializableMutableClass that = (SerializableMutableClass) o;
 
-            if (no != that.no) return false;
-
-            return true;
+            return no == that.no;
         }
     }
 }

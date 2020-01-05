@@ -20,7 +20,7 @@ public class ImmutableDecorator<E> implements SmartListDecorator<E> {
 
 
     private static class Decorator<E> extends SmartList<E> {
-        private SmartList<E> delegatedList;
+        private final SmartList<E> delegatedList;
 
         public Decorator(SmartList<E> delegatedList) {
             Preconditions.checkNotNull(delegatedList);
@@ -44,7 +44,7 @@ public class ImmutableDecorator<E> implements SmartListDecorator<E> {
 
         @Override
         public boolean add(E e) {
-            if(e instanceof Immutable)
+            if (e instanceof Immutable)
                 return delegatedList.add(e);
             else
                 throw new MempressException("Given object must be immutable");
@@ -97,7 +97,7 @@ public class ImmutableDecorator<E> implements SmartListDecorator<E> {
 
         @Override
         public void add(int index, E element) {
-            if(element instanceof Immutable)
+            if (element instanceof Immutable)
                 delegatedList.add(index, element);
             else
                 throw new MempressException("Given object must be immutable");
@@ -105,7 +105,7 @@ public class ImmutableDecorator<E> implements SmartListDecorator<E> {
 
         @Override
         public E set(int index, E element) {
-            if(element instanceof Immutable)
+            if (element instanceof Immutable)
                 return delegatedList.set(index, element);
             else
                 throw new MempressException("Given object must be immutable");

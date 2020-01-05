@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
  * Created by Bartek on 2014-12-05.
  */
 public class ObservableLong {
-    private List<Observer> observerList = new LinkedList<>();
+    private final List<Observer> observerList = new LinkedList<>();
     private long value;
     private boolean useThreads;
     private ExecutorService service;
@@ -28,20 +28,20 @@ public class ObservableLong {
 
     public ObservableLong(long startValue, boolean notifyInAnotherThread) {
         value = startValue;
-        if(notifyInAnotherThread) {
+        if (notifyInAnotherThread) {
             useThreads = notifyInAnotherThread;
             service = Executors.newSingleThreadExecutor();
         }
     }
 
     private void notifyObservers() {
-        if(useThreads) {
+        if (useThreads) {
             service.submit(() -> {
-                for(Observer o : observerList)
+                for (Observer o : observerList)
                     o.update(null, ObservableLong.this);
             });
         } else {
-            for(Observer o : observerList)
+            for (Observer o : observerList)
                 o.update(null, this);
         }
     }

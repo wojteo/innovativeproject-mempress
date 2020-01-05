@@ -8,7 +8,8 @@ import java.io.Serializable;
 public class SerializableClass implements Serializable, Immutable {
     private int no = 1;
 
-    public SerializableClass() {}
+    public SerializableClass() {
+    }
 
     public SerializableClass(int no) {
         this.no = no;
@@ -29,9 +30,7 @@ public class SerializableClass implements Serializable, Immutable {
 
         SerializableClass that = (SerializableClass) o;
 
-        if (no != that.no) return false;
-
-        return true;
+        return no == that.no;
     }
 
 }

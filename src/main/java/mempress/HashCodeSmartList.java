@@ -2,13 +2,16 @@ package mempress;
 
 import com.google.common.base.Preconditions;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Bartek on 2014-11-25.
  */
 public class HashCodeSmartList<E> extends SmartList<E> {
-//    protected Map<ListElementWithHashCode<E>, Integer> holdElements;
+    //    protected Map<ListElementWithHashCode<E>, Integer> holdElements;
     protected Set<ListElementWithHashCode<E>> holdElements;
 
     protected HashCodeSmartList() {
@@ -16,11 +19,13 @@ public class HashCodeSmartList<E> extends SmartList<E> {
     }
 
     protected HashCodeSmartList(long maxWeight) {
-        super(maxWeight); init();
+        super(maxWeight);
+        init();
     }
 
     protected HashCodeSmartList(DecisionTree<E> decTree, long maxWeight) {
-        super(decTree, maxWeight); init();
+        super(decTree, maxWeight);
+        init();
     }
 
     protected HashCodeSmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
@@ -29,7 +34,7 @@ public class HashCodeSmartList<E> extends SmartList<E> {
     }
 
     private void init() {
-        if(getMaximumWeight() > 0 || getTimeLimit() > 0) {
+        if (getMaximumWeight() > 0 || getTimeLimit() > 0) {
             holdElements = Collections.synchronizedSet(new HashSet<ListElementWithHashCode<E>>());
         } else {
             holdElements = new HashSet<>();
@@ -46,12 +51,12 @@ public class HashCodeSmartList<E> extends SmartList<E> {
         Preconditions.checkArgument(colsize > 0);
 
         try {
-            _list.stream().map(el -> (ListElementWithHashCode<E>)el).forEach(le -> {
-                for(Object o : collection)
-                    if(le.getHashcode() == o.hashCode())
+            _list.stream().map(el -> (ListElementWithHashCode<E>) el).forEach(le -> {
+                for (Object o : collection)
+                    if (le.getHashcode() == o.hashCode())
                         counter[0] += 1;
             });
-        } catch(ClassCastException cce) {
+        } catch (ClassCastException cce) {
             return false;
         }
 
@@ -61,16 +66,16 @@ public class HashCodeSmartList<E> extends SmartList<E> {
     @Override
     protected ListElement<E> wrapToListElement(E obj) {
         ListElement<E> le = super.wrapToListElement(obj);
-        if(le == null)
+        if (le == null)
             return null;
 
         ListElementWithHashCode<E> lewh =
                 new ListElementWithHashCode<>(le.getData(), le.objectType, obj.hashCode());
         lewh.setIdentityHC(le.getIdentityHC());
 
-        if(!holdElements.add(lewh)) {
-            for(ListElementWithHashCode<E> listElementWithHashCode : holdElements) {
-                if(listElementWithHashCode.equals(lewh)) {
+        if (!holdElements.add(lewh)) {
+            for (ListElementWithHashCode<E> listElementWithHashCode : holdElements) {
+                if (listElementWithHashCode.equals(lewh)) {
                     lewh = listElementWithHashCode;
                     break;
                 }

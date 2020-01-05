@@ -5,29 +5,26 @@ import mempress.DecisionTree.ObjectDataCarrier;
 
 public class DecisionZipSerializeFile<E> implements DecisionTreeElement<E> {
 
-	@Override
-	public boolean checkConditions(E obj, ObjectDataCarrier metadata) {
-		if(obj instanceof java.io.Serializable)
-			return true;
-		return false;
-	}
+    @Override
+    public boolean checkConditions(E obj, ObjectDataCarrier metadata) {
+        return obj instanceof java.io.Serializable;
+    }
 
-	@Override
-	public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
-		
-		@SuppressWarnings("unchecked")
-		Class<E> objType = (Class<E>)obj.getClass();
+    @Override
+    public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
 
-		Serializer ser = SerializerFactory.createSerializer(SerializerType.ZipFileSerializer);
-		ClassData cd = ser.ser(obj);
-		
-		ListElement<E> le = new ListElement<>(cd, objType);
-		return le;
-	}
+        @SuppressWarnings("unchecked")
+        Class<E> objType = (Class<E>) obj.getClass();
 
-	@Override
-	public SerializerType getOperationType() {
-		return SerializerType.ZipFileSerializer;
-	}
+        Serializer ser = SerializerFactory.createSerializer(SerializerType.ZipFileSerializer);
+        ClassData cd = ser.ser(obj);
+
+        return new ListElement<>(cd, objType);
+    }
+
+    @Override
+    public SerializerType getOperationType() {
+        return SerializerType.ZipFileSerializer;
+    }
 
 }

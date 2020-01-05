@@ -13,8 +13,8 @@ public class ListElementWithHashCode<E> extends ListElement<E> {
 
     @Override
     public boolean compare(Object secondObj) {
-        boolean ret = Integer.compare(hashcode, secondObj.hashCode()) == 0 ? true : false;
-        if(!ret)
+        boolean ret = hashcode == secondObj.hashCode();
+        if (!ret)
             ret = super.compare(secondObj);
 
         return ret;
@@ -43,22 +43,18 @@ public class ListElementWithHashCode<E> extends ListElement<E> {
     // TODO: niekonsekwencja - zmiana działania metody przy nadpisaniu
     @Override
     public boolean equals(Object obj) {
-        if(this == obj) return true;
-        if(obj == null) return false;
+        if (this == obj) return true;
+        if (obj == null) return false;
 
-        if(getClass() != obj.getClass())
+        if (getClass() != obj.getClass())
             return false;
 
-        ListElementWithHashCode<E> le = (ListElementWithHashCode<E>)obj;
+        ListElementWithHashCode<E> le = (ListElementWithHashCode<E>) obj;
 
-        if(getIdentityHC() == le.getIdentityHC())
+        if (getIdentityHC() == le.getIdentityHC())
             return true;
 
-        if(hashcode == le.hashcode) {
-            return true;
-//            return le.get(false).equals(get(false));
-        }
-
-        return false;
+        //            return le.get(false).equals(get(false));
+        return hashcode == le.hashcode;
     }
 }

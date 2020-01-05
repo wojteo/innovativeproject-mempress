@@ -11,18 +11,17 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by Bartek on 2014-12-19.
  */
 public class MutableList<E> implements List<E> {
-    protected List<MutableListElement<E>> _list;
-    protected DecisionTree<E> _decisionTree;
+    protected final List<MutableListElement<E>> _list;
+    protected final DecisionTree<E> _decisionTree;
     private Queue<MutableListElement<E>> _serializationQueue;
     private long weightLimit = 0;
-    private ObservableLong currentWeight = new ObservableLong(0, true);
+    private final ObservableLong currentWeight = new ObservableLong(0, true);
     WeightLimitListener weightLimitListener;
-    private Timer cycleTimer;
     private int usesPerCycle = 1;
     private long timeLimit = 0;
-    private ExecutorService _listTasks;
-    private static int numOfAttemptsToShrinkList = 3;
-    public static int numberOfAsyncTask = 5;
+    private final ExecutorService _listTasks;
+    private static final int numOfAttemptsToShrinkList = 3;
+    public static final int numberOfAsyncTask = 5;
 
     //-------------------------------------------------
     //  STATYCZNE METODY
@@ -62,7 +61,7 @@ public class MutableList<E> implements List<E> {
 
         _serializationQueue = new PriorityQueue<>();
 
-        if(maxWeight > 0 || timeLimit > 0) {
+        if (maxWeight > 0 || timeLimit > 0) {
             _list = Collections.synchronizedList(new ArrayList<MutableListElement<E>>());
             _serializationQueue = new PriorityBlockingQueue<>();
         } else {
@@ -72,12 +71,12 @@ public class MutableList<E> implements List<E> {
 
         weightLimit = maxWeight;
 
-        if(maxWeight > 0) {
+        if (maxWeight > 0) {
             currentWeight.addListener((weightLimitListener = new WeightLimitListener()));
         }
 
-        if(timeLimit > 0) {
-            cycleTimer = new Timer();
+        if (timeLimit > 0) {
+            Timer cycleTimer = new Timer();
             cycleTimer.schedule(new DemoteTimer(), timeLimit);
             this.timeLimit = TimeUnit.NANOSECONDS.convert(timeLimit, TimeUnit.MILLISECONDS);
         }
@@ -113,10 +112,10 @@ public class MutableList<E> implements List<E> {
         return obj instanceof Serializable;
     }
 
-    protected long demoteElements(int numOfElements) {
+    protected long demoteElements() {
         long releasedBytes = 0;
         long tmp;
-        for (int i = 0; i < numOfElements; ++i) {
+        for (int i = 0; i < 1; ++i) {
             try {
                 MutableListElement<E> sle = null;
                 sle = _serializationQueue.poll();
@@ -137,9 +136,13 @@ public class MutableList<E> implements List<E> {
         return releasedBytes;
     }
 
-    public long getMaximumWeight() { return weightLimit; }
+    public long getMaximumWeight() {
+        return weightLimit;
+    }
 
-    public long getCurrentWeight() { return currentWeight.get(); }
+    public long getCurrentWeight() {
+        return currentWeight.get();
+    }
 
     public long getTimeLimit() {
         return timeLimit;
@@ -161,8 +164,8 @@ public class MutableList<E> implements List<E> {
     public boolean remove(Object o) {
         Preconditions.checkNotNull(o);
         boolean found = false;
-        for(int i = 0; i < size(); ++i)
-            if(_list.get(i).compare(o)) {
+        for (int i = 0; i < size(); ++i)
+            if (_list.get(i).compare(o)) {
                 _list.remove(i);
                 found = true;
             }
@@ -185,13 +188,13 @@ public class MutableList<E> implements List<E> {
                     }
                 })
                 .forEach(le -> {
-                    if(le == null)
+                    if (le == null)
                         return;
                     boolean prev = true;
                     prev = prev && _list.add(le);
                     prev = prev && _serializationQueue.add(le);
                     currentWeight.add(le.getSize());
-                    if(prev) addedElem[0]++;
+                    if (prev) addedElem[0]++;
                 });
 
         return addedElem[0] > 0;
@@ -201,8 +204,8 @@ public class MutableList<E> implements List<E> {
     public boolean addAll(int index, Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
 
-        final int[] shift = { index };
-        final int[] addedElem = { 0 };
+        final int[] shift = {index};
+        final int[] addedElem = {0};
 
         c.stream().filter(this::checkConditions)
                 .map(obj -> {
@@ -214,7 +217,7 @@ public class MutableList<E> implements List<E> {
                     }
                 })
                 .forEach(le -> {
-                    if(le == null)
+                    if (le == null)
                         return;
                     _list.add(shift[0]++, le);
                     _serializationQueue.add(le);
@@ -263,7 +266,7 @@ public class MutableList<E> implements List<E> {
     public E remove(int index) {
         ListElement<E> el = _list.remove(index);
 
-        if(el == null)
+        if (el == null)
             return null;
         E obj = el.get();
         _serializationQueue.remove(el);
@@ -274,8 +277,6 @@ public class MutableList<E> implements List<E> {
 
     /**
      * Od momentu odczytania elementu, jest on trzymany w formie zdekodowanej
-     * @param index
-     * @return
      */
     @Override
     public E get(int index) {
@@ -304,23 +305,22 @@ public class MutableList<E> implements List<E> {
     @Override
     public boolean removeAll(Collection<?> c) {
         boolean modified = false;
-        for(int i = 0; i < _list.size(); ++i) {
+        for (int i = 0; i < _list.size(); ++i) {
             ListElement<E> le = _list.get(i);
             int hc = le.getIdentityHC();
             E obj = null;
-            for(Object o : c) {
-                if(System.identityHashCode(o) == hc) {
-                    if(remove(i--) != null) {
+            for (Object o : c) {
+                if (System.identityHashCode(o) == hc) {
+                    if (remove(i--) != null) {
                         modified = true;
                     }
                     break;
-                }
-                else {
-                    if(obj == null) {
+                } else {
+                    if (obj == null) {
                         obj = le.get(false);
                     }
-                    if(obj.equals(o)) {
-                        if(remove(i--) != null) {
+                    if (obj.equals(o)) {
+                        if (remove(i--) != null) {
                             modified = true;
                         }
                         break;
@@ -332,14 +332,9 @@ public class MutableList<E> implements List<E> {
         return modified;
     }
 
-    /**
-     * Niezaimplementowane
-     * @param c
-     * @return
-     */
     @Override
     public boolean retainAll(Collection<?> c) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 
     @Override
@@ -376,9 +371,9 @@ public class MutableList<E> implements List<E> {
         Preconditions.checkNotNull(c);
         Preconditions.checkArgument(colsize > 0);
 
-        for(ListElement<E> sle : _list) {
-            for(Object o : c) {
-                if(sle.compare(o))
+        for (ListElement<E> sle : _list) {
+            for (Object o : c) {
+                if (sle.compare(o))
                     ++counter;
             }
         }
@@ -399,8 +394,8 @@ public class MutableList<E> implements List<E> {
     @Override
     public int indexOf(Object o) {
         int size = size();
-        for(int i = 0; i < size; ++i) {
-            if(_list.get(i).compare(o))
+        for (int i = 0; i < size; ++i) {
+            if (_list.get(i).compare(o))
                 return i;
         }
 
@@ -410,8 +405,8 @@ public class MutableList<E> implements List<E> {
     @Override
     public int lastIndexOf(Object o) {
         Preconditions.checkNotNull(o);
-        for(int i = size() - 1; i >= 0; --i) {
-            if(_list.get(i).compare(o))
+        for (int i = size() - 1; i >= 0; --i) {
+            if (_list.get(i).compare(o))
                 return i;
         }
 
@@ -421,8 +416,8 @@ public class MutableList<E> implements List<E> {
     @Override
     public boolean contains(Object o) {
 
-        for(ListElement<E> sle : _list) {
-            if(sle.compare(o))
+        for (ListElement<E> sle : _list) {
+            if (sle.compare(o))
                 return true;
         }
 
@@ -456,7 +451,7 @@ public class MutableList<E> implements List<E> {
     public Object[] toArray() {
         int size = size();
         Object[] array = new Object[size()];
-        for(int i = 0; i < size; ++i)
+        for (int i = 0; i < size; ++i)
             array[i] = _list.get(i).get();
         return array;
     }
@@ -465,8 +460,8 @@ public class MutableList<E> implements List<E> {
     @SuppressWarnings("unchecked")
     public <T> T[] toArray(T[] a) {
         Preconditions.checkNotNull(a);
-        if(a.length < size()) {
-            return (T[])Arrays.copyOf(toArray(), size(), a.getClass());
+        if (a.length < size()) {
+            return (T[]) Arrays.copyOf(toArray(), size(), a.getClass());
         } else {
             System.arraycopy(toArray(), 0, a, 0, size());
             return a;
@@ -475,6 +470,7 @@ public class MutableList<E> implements List<E> {
 
     /**
      * Zwraca fragment SmartListy. Fragment też jest typu SmartList
+     *
      * @param fromIndex indeks pierwszego elementu do skopiowania
      * @param toIndex
      * @return
@@ -494,7 +490,7 @@ public class MutableList<E> implements List<E> {
                     weight[0] += el.getSize();
                 });
 
-        if(ml.weightLimitListener != null)
+        if (ml.weightLimitListener != null)
             ml.currentWeight.setValue(weight[0]);
 
         return ml;
@@ -510,14 +506,14 @@ public class MutableList<E> implements List<E> {
     //---------------------------------------------------
 
     class WeightLimitListener implements Observer {
-        ReentrantLock lock = new ReentrantLock();
+        final ReentrantLock lock = new ReentrantLock();
 
         @Override
         public void update(Observable o, Object arg) {
-            long l = ((ObservableLong)arg).get();
+            long l = ((ObservableLong) arg).get();
 
             final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
-            if(l > calculatedLimit) {
+            if (l > calculatedLimit) {
                 _listTasks.submit(() -> {
                     lock.lock();
                     try {
@@ -531,14 +527,14 @@ public class MutableList<E> implements List<E> {
 
         private void tryToShrink(long newVal) {
             long recoveredSpace = 0;
-            if(newVal >= currentWeight.get())
+            if (newVal >= currentWeight.get())
                 return;
             boolean breakOuterLoop = false;
-            for(int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
-                for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0 ; --counter) {
-                    recoveredSpace += demoteElements(1);
+            for (int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
+                for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0; --counter) {
+                    recoveredSpace += demoteElements();
 
-                    if(newVal >= currentWeight.get() - recoveredSpace) {
+                    if (newVal >= currentWeight.get() - recoveredSpace) {
                         breakOuterLoop = true;
                         break;
                     }
@@ -557,10 +553,11 @@ public class MutableList<E> implements List<E> {
             _list.forEach(le -> {
                 long diff = System.nanoTime() - le.getTimeCreated();
                 int useC = le.getUseCount();
-                if(useC == 0 || (useC == 0 && diff > 2 * timeLimit) || diff / useC > usesPerCycle * timeLimit) {
+                if (useC == 0 || (useC == 0 && diff > 2 * timeLimit) || diff / useC > usesPerCycle * timeLimit) {
                     try {
                         _decisionTree.demote(le);
-                    } catch (MempressException e) {}
+                    } catch (MempressException e) {
+                    }
                 }
             });
         }
@@ -583,7 +580,7 @@ public class MutableList<E> implements List<E> {
         @Override
         public SharedObject<T> next() {
             int tmp = index + 1;
-            if(tmp >= _list.size()) throw new NoSuchElementException();
+            if (tmp >= _list.size()) throw new NoSuchElementException();
             index = tmp;
             return MutableList.get(_list, index);
         }

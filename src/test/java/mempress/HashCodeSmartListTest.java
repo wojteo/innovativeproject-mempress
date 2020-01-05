@@ -3,13 +3,11 @@ package mempress;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
+
 /**
  * Created by Bartek on 2014-11-29.
  */
@@ -63,13 +61,13 @@ public class HashCodeSmartListTest {
         assertEquals(4, _list.lastIndexOf(hcSerializableClass));
 
         // Maksimum cztery wywołania hashCode!!!
-        assertTrue(HCSerializableClass.numOfHashCodeCalls - hashCodeUseCountBefore == 4);
+        assertEquals(4, HCSerializableClass.numOfHashCodeCalls - hashCodeUseCountBefore);
     }
 
     @Test
     public void testWrapToListElement() {
         HCSerializableClass hcSerializableClass = new HCSerializableClass(1, "First element");
-        assertTrue(_list.wrapToListElement(hcSerializableClass).getClass() == ListElementWithHashCode.class);
+        assertSame(_list.wrapToListElement(hcSerializableClass).getClass(), ListElementWithHashCode.class);
     }
 
     @Test
@@ -78,15 +76,17 @@ public class HashCodeSmartListTest {
         try {
             new HashCodeSmartList<HCSerializableClass>(null, 1);
             fail();
-        } catch (NullPointerException ex) {}
+        } catch (NullPointerException ex) {
+        }
 
         tmp = new HashCodeSmartList<>(-1);
         tmp = new HashCodeSmartList<>(1);
 
-        tmp = new HashCodeSmartList<>(DecisionTreeBuilder.<HCSerializableClass>buildDefaultTree(), 1, -1);
+        tmp = new HashCodeSmartList<>(DecisionTreeBuilder.buildDefaultTree(), 1, -1);
         try {
             tmp = new HashCodeSmartList<>(null, 1, 1);
-        } catch (NullPointerException ex) {}
+        } catch (NullPointerException ex) {
+        }
     }
 
 

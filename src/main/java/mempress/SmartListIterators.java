@@ -2,8 +2,14 @@ package mempress;
 
 import com.google.common.base.Preconditions;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayDeque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 /**
  * Created by Bartek on 2014-12-02.
@@ -62,11 +68,11 @@ public class SmartListIterators {
     static class PreloadIterator<T> implements Iterator<T> {
         private final SmartList<T> smartList;
         private int index = -1;
-        private int prepareInAdv;
-        private ArrayDeque<Future<T>> buffer;
-        private int step;
+        private final int prepareInAdv;
+        private final ArrayDeque<Future<T>> buffer;
+        private final int step;
         private boolean init = false;
-        protected ExecutorService tasks;
+        protected final ExecutorService tasks;
 
         public PreloadIterator(SmartList<T> sl) {
             this(sl, 0, 2, 1);
@@ -102,7 +108,7 @@ public class SmartListIterators {
         public T next() {
             int tmp = index + step;
 
-            if(tmp >= smartList.size())
+            if (tmp >= smartList.size())
                 throw new NoSuchElementException();
 
             prepareNextElements(Math.max(prepareInAdv - buffer.size(), 0));
@@ -120,8 +126,8 @@ public class SmartListIterators {
 
             int startIndex = index + step;
 
-            for(int i = startIndex; i < startIndex + num*step; i += step) {
-                if(smartList.size() <= i)
+            for (int i = startIndex; i < startIndex + num * step; i += step) {
+                if (smartList.size() <= i)
                     break;
 
                 final int pos = i;
@@ -138,14 +144,18 @@ public class SmartListIterators {
     static class ReversedPreloadIterator<T> implements Iterator<T> {
         private final SmartList<T> smartList;
         private int index = -1;
-        private int prepareInAdv;
-        private int step;
-        private LinkedList<Future<T>> buffer;
-        protected ExecutorService tasks;
+        private final int prepareInAdv;
+        private final int step;
+        private final LinkedList<Future<T>> buffer;
+        protected final ExecutorService tasks;
 
-        public ReversedPreloadIterator(SmartList<T> smartList) { this(smartList, 0, 2, 1); }
+        public ReversedPreloadIterator(SmartList<T> smartList) {
+            this(smartList, 0, 2, 1);
+        }
 
-        public ReversedPreloadIterator(SmartList<T> smartList, int startIndex) { this(smartList, startIndex, 2, 1); }
+        public ReversedPreloadIterator(SmartList<T> smartList, int startIndex) {
+            this(smartList, startIndex, 2, 1);
+        }
 
         public ReversedPreloadIterator(SmartList<T> smartList, int startIndex, int prepareInAdv) {
             this(smartList, startIndex, prepareInAdv, 1);
@@ -173,7 +183,7 @@ public class SmartListIterators {
         public T next() {
             int tmp = index - step;
 
-            if(tmp < 0)
+            if (tmp < 0)
                 throw new NoSuchElementException();
 
             prepareNextElements(Math.max(prepareInAdv - buffer.size(), 0));
@@ -191,8 +201,8 @@ public class SmartListIterators {
 
             int startIndex = index - step;
 
-            for(int i = startIndex; i > startIndex - num * step; i -= step) {
-                if(i < 0)
+            for (int i = startIndex; i > startIndex - num * step; i -= step) {
+                if (i < 0)
                     break;
 
                 final int pos = i;
@@ -208,7 +218,7 @@ public class SmartListIterators {
     static class StepIterator<T> implements Iterator<T> {
         private final SmartList<T> list;
         private int index;
-        private int step;
+        private final int step;
 
         public StepIterator(SmartList<T> list) {
             this(list, 0, 1);
@@ -234,7 +244,7 @@ public class SmartListIterators {
         @Override
         public T next() {
             int tmp = index + step;
-            if(tmp >= list.size())
+            if (tmp >= list.size())
                 throw new NoSuchElementException();
             index = tmp;
             return list.get(index);

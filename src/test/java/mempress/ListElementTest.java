@@ -1,12 +1,12 @@
 package mempress;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.Serializable;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
+
 /**
  * Created by Bartek on 2014-11-29.
  */
@@ -27,12 +27,14 @@ public class ListElementTest {
         try {
             _wrappedObj = new ListElement<>(_classData, null);
             fail();
-        } catch (NullPointerException ex) {}
+        } catch (NullPointerException ex) {
+        }
 
         try {
             _wrappedObj = new ListElement<>(null, HCSerializableClass.class);
             fail();
-        } catch (NullPointerException ex) {}
+        } catch (NullPointerException ex) {
+        }
     }
 
     @Test
@@ -80,10 +82,10 @@ public class ListElementTest {
                 new ClassData(classDataTmp.getSerializerType(), classDataTmp.getData(), Long.MAX_VALUE),
                 HCSerializableClass.class
         ),
-        tmp2 = new ListElement<>(
-                SerializerFactory.createSerializer(SerializerType.NoSerialized).ser(new HCSerializableClass(46, "Forty six")),
-                HCSerializableClass.class
-        );
+                tmp2 = new ListElement<>(
+                        SerializerFactory.createSerializer(SerializerType.NoSerialized).ser(new HCSerializableClass(46, "Forty six")),
+                        HCSerializableClass.class
+                );
 
         // Increase useCount by 1
         _wrappedObj.get();
@@ -114,7 +116,8 @@ public class ListElementTest {
 
         try {
             tmp.assign(null);
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+        }
 
         assertNotEquals(_wrappedObj, "");
 

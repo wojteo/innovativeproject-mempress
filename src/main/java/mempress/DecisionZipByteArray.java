@@ -7,16 +7,14 @@ public class DecisionZipByteArray<E> implements DecisionTree.DecisionTreeElement
 
     @Override
     public boolean checkConditions(E obj, DecisionTree.ObjectDataCarrier metadata) {
-        if(obj instanceof java.io.Serializable)
-            return true;
-        return false;
+        return obj instanceof java.io.Serializable;
     }
 
     @Override
     public ListElement<E> processObject(E obj, DecisionTree.ObjectDataCarrier metadata) {
 
         @SuppressWarnings("unchecked")
-        Class<E> objType = (Class<E>)obj.getClass();
+        Class<E> objType = (Class<E>) obj.getClass();
 
         Serializer ser = SerializerFactory.createSerializer(SerializerType.ZipByteArraySerializer);
         ClassData cd = ser.ser(obj);
@@ -31,16 +29,13 @@ public class DecisionZipByteArray<E> implements DecisionTree.DecisionTreeElement
 
     @Override
     public boolean fastForwardAvailable(SerializerType from) {
-        if(from == SerializerType.NoSerialized)
-            return true;
-        else
-            return false;
+        return from == SerializerType.NoSerialized;
     }
 
     @Override
     public ListElement<E> fastForward(ListElement<E> source) {
-        if(source.getData().getSerializerType() != SerializerType.NoSerialized)
-            throw new UnsupportedOperationException();
+        if (source.getData().getSerializerType() != SerializerType.NoSerialized)
+            throw new UnsupportedOperationException("Not implemented yet");
         source.lock.lock();
         try {
             ClassData classData = SerializerFactory.createSerializer(SerializerType.ZipByteArraySerializer).fastForward(source.getData());

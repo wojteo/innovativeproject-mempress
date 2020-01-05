@@ -10,10 +10,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class ListElement<E> implements Comparable<ListElement<E>> {
     protected ClassData data;
     protected Class<E> objectType;
-    protected ReentrantLock lock = new ReentrantLock();
+    protected final ReentrantLock lock = new ReentrantLock();
     private int useCount;
     private int identityHC;
-    private long timeCreated;
+    private final long timeCreated;
 
     public ListElement(ClassData data, Class<E> objectType) {
         Preconditions.checkNotNull(data);
@@ -25,13 +25,13 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
 
     @Override
     public boolean equals(Object obj) {
-        if(this == obj) return true;
-        if(obj == null) return false;
+        if (this == obj) return true;
+        if (obj == null) return false;
 
-        if(getClass() != obj.getClass())
+        if (getClass() != obj.getClass())
             return false;
 
-        ListElement le = (ListElement)obj;
+        ListElement le = (ListElement) obj;
         return getData().equals(le.getData()) &&
                 objectType.equals(le.objectType) &&
                 useCount == le.useCount;
@@ -43,7 +43,7 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
 
     public E get(boolean countIt) {
         E e = getObject();
-        if(countIt) {
+        if (countIt) {
             ++useCount;
         }
         return e;
@@ -105,10 +105,10 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
     public int compareTo(ListElement<E> o) {
         int ret = Boolean.compare(lock.isLocked(), o.lock.isLocked());
 
-        if(ret == 0)
+        if (ret == 0)
             ret = Integer.compare(getUseCount(), o.getUseCount());
 
-        if(ret == 0)
+        if (ret == 0)
             ret = -Long.compare(getSize(), o.getSize());
 
         return ret;
@@ -136,7 +136,7 @@ public class ListElement<E> implements Comparable<ListElement<E>> {
     }
 
     public boolean compare(Object secondObj) {
-        if(System.identityHashCode(secondObj) == identityHC)
+        if (System.identityHashCode(secondObj) == identityHC)
             return true;
         else
             return get(false).equals(secondObj);

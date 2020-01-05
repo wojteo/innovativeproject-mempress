@@ -21,7 +21,7 @@ public class DecisionTreeBuilder<E> {
                 .build();
     }
 
-    private DecisionTree<E> buildObject;
+    private final DecisionTree<E> buildObject;
 
     private DecisionTreeBuilder() {
         buildObject = new DecisionTree<>();

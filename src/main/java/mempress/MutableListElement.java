@@ -18,7 +18,7 @@ public class MutableListElement<E> extends ListElement<E> {
 
     public void decrementUseCount() {
         --sharedCount;
-        if(sharedCount < 0)
+        if (sharedCount < 0)
             throw new IllegalStateException();
     }
 
@@ -28,19 +28,19 @@ public class MutableListElement<E> extends ListElement<E> {
 
     @Override
     public E get(boolean countIt) {
-        while (sharedCount != 0);
+        while (sharedCount != 0) ;
         return super.get(countIt);
     }
 
     @Override
     public ClassData getData() {
-        while (sharedCount != 0);
+        while (sharedCount != 0) ;
         return super.getData();
     }
 
     @Override
     public void assign(ListElement<E> source) {
-        while (sharedCount != 0);
+        while (sharedCount != 0) ;
         super.assign(source);
     }
 
@@ -58,9 +58,10 @@ public class MutableListElement<E> extends ListElement<E> {
     public int compareTo(ListElement<E> o) {
         int ret = 0;
         try {
-            ret = Integer.compare(sharedCount, ((MutableListElement<E>)o).sharedCount);
-        } catch (ClassCastException ex) {}
-        if(ret == 0) {
+            ret = Integer.compare(sharedCount, ((MutableListElement<E>) o).sharedCount);
+        } catch (ClassCastException ex) {
+        }
+        if (ret == 0) {
             ret = super.compareTo(o);
         }
 

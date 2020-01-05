@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+
 /**
  * Created by Bartek on 2014-12-01.
  */
@@ -16,11 +17,11 @@ public class ListElementWithHashCodeTest {
     public void initTest() {
         HCSerializableClass hcSerializableClass = new HCSerializableClass(_le1int, _le1String);
         ClassData cd = SerializerFactory.createSerializer(SerializerType.NoSerialized).ser(hcSerializableClass);
-        _le1 = new ListElementWithHashCode<>(cd, (Class<HCSerializableClass>)hcSerializableClass.getClass(), hcSerializableClass.hashCode());
+        _le1 = new ListElementWithHashCode<>(cd, (Class<HCSerializableClass>) hcSerializableClass.getClass(), hcSerializableClass.hashCode());
 
         hcSerializableClass = new HCSerializableClass(_le2int, _le2String);
         cd = SerializerFactory.createSerializer(SerializerType.NoSerialized).ser(hcSerializableClass);
-        _le2 = new ListElementWithHashCode<>(cd, (Class<HCSerializableClass>)hcSerializableClass.getClass(), hcSerializableClass.hashCode());
+        _le2 = new ListElementWithHashCode<>(cd, (Class<HCSerializableClass>) hcSerializableClass.getClass(), hcSerializableClass.hashCode());
     }
 
     @Test
@@ -33,15 +34,16 @@ public class ListElementWithHashCodeTest {
         try {
             _le1.assign(le);
             fail();
-        } catch (ClassCastException e) {}
+        } catch (ClassCastException e) {
+        }
     }
 
     @Test
     public void testGetHashCode() {
         HCSerializableClass hcSerializableClass =
-                (HCSerializableClass)SerializerFactory.createSerializer(_le1.getData().getSerializerType()).des(_le1.getData());
+                (HCSerializableClass) SerializerFactory.createSerializer(_le1.getData().getSerializerType()).des(_le1.getData());
 
-        assertEquals( hcSerializableClass.hashCode(), _le1.getHashcode());
+        assertEquals(hcSerializableClass.hashCode(), _le1.getHashcode());
 
     }
 

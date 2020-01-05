@@ -45,9 +45,7 @@ public class HCSerializableClass implements Serializable, Immutable {
         HCSerializableClass that = (HCSerializableClass) o;
 
         if (myId != that.myId) return false;
-        if (something != null ? !something.equals(that.something) : that.something != null) return false;
-
-        return true;
+        return something != null ? something.equals(that.something) : that.something == null;
     }
 
     @Override

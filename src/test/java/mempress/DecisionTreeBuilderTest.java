@@ -1,10 +1,7 @@
 package mempress; /**
  * Created by Bartek on 2014-11-28.
  */
-import mempress.DecisionSerializeByteArray;
-import mempress.DecisionStoreIt;
-import mempress.DecisionTree;
-import mempress.DecisionTreeBuilder;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,7 +9,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class DecisionTreeBuilderTest {
     private DecisionTreeBuilder<SerializableClass> _scobject;
@@ -29,7 +27,8 @@ public class DecisionTreeBuilderTest {
         try {
             _scobject.addTreeElement(null);
             fail();
-        } catch(NullPointerException e) {}
+        } catch (NullPointerException e) {
+        }
 
         List<DecisionTree.DecisionTreeElement<SerializableClass>> elements = new ArrayList<DecisionTree.DecisionTreeElement<SerializableClass>>() {{
             add(new DecisionStoreIt<>());
@@ -43,12 +42,14 @@ public class DecisionTreeBuilderTest {
         try {
             _scobject.addTreeElements(elements);
             fail();
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException e) {
+        }
 
         try {
             _scobject.addTreeElements(null);
             fail();
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+        }
 
         assertNotNull(_scobject.build());
     }

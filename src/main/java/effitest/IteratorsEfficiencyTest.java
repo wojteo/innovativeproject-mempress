@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class IteratorsEfficiencyTest {
     private SmartList<TestClass> smartList;
     private long[] time1, time2;
-    private int numOfElements;
+    private final int numOfElements;
 
     public IteratorsEfficiencyTest(int numOfElements) {
         this.numOfElements = numOfElements;
@@ -38,7 +38,7 @@ public class IteratorsEfficiencyTest {
     }
 
     private void generateElements() {
-        for(int i = 1; i <= numOfElements; ++i) {
+        for (int i = 1; i <= numOfElements; ++i) {
             TestClass tc = new TestClass(i, Math.pow(i, 2));
             smartList.add(tc);
         }
@@ -82,7 +82,7 @@ public class IteratorsEfficiencyTest {
         System.out.println("[Standard iterator] Entire time in Ms: " + sumTime1 + ", average: " + averageTime1);
         System.out.println("[Preload iterator] Entire time in Ms: " + sumTime2 + ", average: " + averageTime2);
 
-        for(int i = 0; i < 100; ++i)
+        for (int i = 0; i < 100; ++i)
             System.out.println(String.format("(%d, %d) ", efficiencyTest.time1[i], efficiencyTest.time2[i]));
 
         System.out.println();
@@ -122,9 +122,7 @@ class TestClass implements Serializable, Immutable {
         TestClass testClass = (TestClass) o;
 
         if (Double.compare(testClass.dval, dval) != 0) return false;
-        if (ival != testClass.ival) return false;
-
-        return true;
+        return ival == testClass.ival;
     }
 
     @Override

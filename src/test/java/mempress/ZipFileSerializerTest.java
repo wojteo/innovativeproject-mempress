@@ -1,14 +1,16 @@
 package mempress;
 
 
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
 /**
  * Created by Bartek on 2014-12-18.
  */
 public class ZipFileSerializerTest {
     @Test
-    public void testSerAndDes(){
+    public void testSerAndDes() {
 
         String basic = "The path of the righteous man is beset on all sides by the inequities "
                 + "of the selfish and the tyranny of evil men. Blessed is he who, in the "

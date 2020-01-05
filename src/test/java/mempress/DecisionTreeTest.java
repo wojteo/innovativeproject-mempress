@@ -1,13 +1,10 @@
 package mempress;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 /**
  * Created by Bartek on 2014-11-28.
@@ -33,32 +30,35 @@ public class DecisionTreeTest {
 
     @Test
     public void testProcessObject() {
-        assertTrue(_decTree.processObject(_firstElement).getData().getSerializerType() == SerializerType.NoSerialized);
-        assertTrue(_decTree.processObject(_secondElement).getData().getSerializerType() == SerializerType.NoSerialized);
+        assertSame(_decTree.processObject(_firstElement).getData().getSerializerType(), SerializerType.NoSerialized);
+        assertSame(_decTree.processObject(_secondElement).getData().getSerializerType(), SerializerType.NoSerialized);
 
         try {
             _decTree.processObject(null);
 
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+        }
     }
 
     //ListElement<NonSerializableClass> tmp1, tmp2;
 
     @Test
     public void testProcessObjectWithDifferentStartPoint() {
-        assertTrue(_decTree.processObject(_secondElement, 1).getData().getSerializerType() == SerializerType.ByteArraySerializer);
+        assertSame(_decTree.processObject(_secondElement, 1).getData().getSerializerType(), SerializerType.ByteArraySerializer);
 
         try {
 //            _decTree.processObject(_firstElement, 2);
 //            fail();
 
-            assertTrue(_decTree.processObject(_firstElement, 2).getData().getSerializerType() == SerializerType.FileSerializer);
-        } catch (MempressException e) {}
+            assertSame(_decTree.processObject(_firstElement, 2).getData().getSerializerType(), SerializerType.FileSerializer);
+        } catch (MempressException e) {
+        }
 
         try {
             _decTree.processObject(null, 1);
 
-        } catch (NullPointerException e) {}
+        } catch (NullPointerException e) {
+        }
     }
 
     @Test
@@ -66,22 +66,24 @@ public class DecisionTreeTest {
         ListElement<SerializableClass> tmp1 = _decTree.processObject(_firstElement),
                 tmp2 = _decTree.processObject(_secondElement);
 
-        tmp2= _decTree.demote(tmp2);
-        assertTrue(tmp2.getData().getSerializerType() == SerializerType.ByteArraySerializer);
+        tmp2 = _decTree.demote(tmp2);
+        assertSame(tmp2.getData().getSerializerType(), SerializerType.ByteArraySerializer);
 
         try {
             tmp1 = _decTree.demote(tmp1);
             // fail();
-            assertTrue(tmp1.getData().getSerializerType() == SerializerType.ByteArraySerializer);
-        } catch (MempressException e) {}
+            assertSame(tmp1.getData().getSerializerType(), SerializerType.ByteArraySerializer);
+        } catch (MempressException e) {
+        }
 
         tmp2 = _decTree.demote(tmp2);
-        assertTrue(tmp2.getData().getSerializerType() == SerializerType.FileSerializer);
+        assertSame(tmp2.getData().getSerializerType(), SerializerType.FileSerializer);
 
         try {
             tmp2 = _decTree.demote(tmp2);
             fail();
-        } catch (MempressException e) {}
+        } catch (MempressException e) {
+        }
     }
 
     @Test
@@ -89,13 +91,13 @@ public class DecisionTreeTest {
         ListElement<SerializableClass> tmp1 = _decTree.processObject(_firstElement),
                 tmp2 = _decTree.processObject(_secondElement, 1);
 
-        assertTrue(tmp1.getData().getSerializerType() == SerializerType.NoSerialized);
-        assertTrue(tmp2.getData().getSerializerType() == SerializerType.ByteArraySerializer);
+        assertSame(tmp1.getData().getSerializerType(), SerializerType.NoSerialized);
+        assertSame(tmp2.getData().getSerializerType(), SerializerType.ByteArraySerializer);
 
         tmp1 = _decTree.goBackToHighestState(tmp1);
         tmp2 = _decTree.goBackToHighestState(tmp2);
 
-        assertTrue(tmp1.getData().getSerializerType() == SerializerType.NoSerialized);
-        assertTrue(tmp2.getData().getSerializerType() == SerializerType.NoSerialized);
+        assertSame(tmp1.getData().getSerializerType(), SerializerType.NoSerialized);
+        assertSame(tmp2.getData().getSerializerType(), SerializerType.NoSerialized);
     }
 }

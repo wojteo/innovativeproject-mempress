@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/nokia-wroclaw/innovativeproject-mempress.svg?branch=dev)](https://travis-ci.org/nokia-wroclaw/innovativeproject-mempress)
+[![Build Status](https://travis-ci.org/wojteo/innovativeproject-mempress.svg?branch=dev)](https://travis-ci.org/wojteo/innovativeproject-mempress)
 innovativeproject-mempress
 ==========================
 
