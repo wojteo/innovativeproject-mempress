@@ -1,6 +1,12 @@
-package mempress;
+package mempress.list;
 
 import com.google.common.base.Preconditions;
+import mempress.Immutable;
+import mempress.MempressException;
+import mempress.ObservableLong;
+import mempress.decision.DecisionTree;
+import mempress.decision.DecisionTreeBuilder;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.*;
@@ -13,18 +19,19 @@ import java.util.concurrent.locks.ReentrantLock;
  * @param <E>
  */
 public class SmartList<E> implements List<E>, Iterable<E> {
-    protected final List<ListElement<E>> _list;
-    protected final DecisionTree<E> _decisionTree;
+    public static final int NUMBER_OF_ASYNC_TASK = 5;
+    private static final Logger log = Logger.getLogger(SmartList.class);
+    private static final int NUM_OF_ATTEMPTS_TO_SHRINK_LIST = 3;
+    private static int numOfAttemptsToGetObject = 3;
+    public final List<ListElement<E>> _list;
+    public final DecisionTree<E> _decisionTree;
+    private final ObservableLong currentWeight = new ObservableLong(0, true);
+    private final ExecutorService _listTasks;
+    public WeightLimitListener weightLimitListener;
     private Queue<ListElement<E>> _serializationQueue;
     private long weightLimit = 0;
-    private final ObservableLong currentWeight = new ObservableLong(0, true);
-    WeightLimitListener weightLimitListener;
     private int usesPerCycle = 1;
     private long timeLimit = 0;
-    private final ExecutorService _listTasks;
-    private static final int numOfAttemptsToShrinkList = 3;
-    private static int numOfAttemptsToGetObject = 3;
-    public static final int numberOfAsyncTask = 5;
 
 
     //--------------------------------------------------------------------
@@ -32,15 +39,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     //--------------------------------------------------------------------
 
     protected SmartList() {
-        this(DecisionTreeBuilder.<E>buildDefaultTree(), -1, -1);
-    }
-
-    protected SmartList(long maxWeight) {
-        this(DecisionTreeBuilder.<E>buildDefaultTree(), maxWeight, -1);
-    }
-
-    protected SmartList(DecisionTree<E> decTree, long maxWeight) {
-        this(decTree, maxWeight, -1);
+        this(DecisionTreeBuilder.buildDefaultTree(), -1, -1);
     }
 
     protected SmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
@@ -72,11 +71,54 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             this.timeLimit = TimeUnit.NANOSECONDS.convert(timeLimit, TimeUnit.MILLISECONDS);
         }
 
-        _listTasks = Executors.newFixedThreadPool(numberOfAsyncTask);
+        _listTasks = Executors.newFixedThreadPool(NUMBER_OF_ASYNC_TASK);
     }
 
+    protected SmartList(long maxWeight) {
+        this(DecisionTreeBuilder.buildDefaultTree(), maxWeight, -1);
+    }
+
+    protected SmartList(DecisionTree<E> decTree, long maxWeight) {
+        this(decTree, maxWeight, -1);
+    }
+
+    @Override
+    public int hashCode() {
+        return _list.hashCode();
+    }
     //----------------------------------------------------------------
-    //  MODYFIKOWANIE ZAWARTOSCI LISTY
+
+    @Override
+    public boolean equals(Object o) {
+        return _list.equals(o);
+    }
+
+    // TODO: Dokończyć pisanie
+    public long demoteElements(int numOfElements) {
+        long releasedBytes = 0;
+        long tmp;
+        for (int i = 0; i < numOfElements; ++i) {
+            try {
+                ListElement<E> sle = null;
+                sle = _serializationQueue.poll();
+                if (sle == null) continue;
+
+                tmp = sle.getSize();
+                sle = _decisionTree.demote(sle);
+                if (sle == null)
+                    continue;
+                releasedBytes += tmp - sle.getSize();
+
+                _serializationQueue.add(sle);
+
+            } catch (MempressException me) {
+//                System.err.println("Przechwycono wyjatek: " + me.getMessage());
+            }
+        }
+
+        return releasedBytes;
+    }    //  MODYFIKOWANIE ZAWARTOSCI LISTY
+
     //----------------------------------------------------------------
     @Override
     public boolean remove(Object o) {
@@ -90,6 +132,18 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return found;
     }
 
+    public long getMaximumWeight() {
+        return weightLimit;
+    }
+
+    public long getCurrentWeight() {
+        return currentWeight.get();
+    }
+
+    public long getTimeLimit() {
+        return timeLimit;
+    }
+
     @Override
     public boolean addAll(Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
@@ -101,7 +155,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     try {
                         return wrapElementAsync(obj).get();
                     } catch (Exception e) {
-                        System.err.println(e.getMessage());
+                        log.error(e.getMessage(), e);
                         return null;
                     }
                 })
@@ -118,6 +172,36 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return addedElem[0] > 0;
     }
 
+    public int getUsesPerCycle() {
+        return usesPerCycle;
+    }
+
+    public void setUsesPerCycle(int usesPerCycle) {
+        this.usesPerCycle = usesPerCycle;
+    }
+
+    protected class SimpleIterator implements Iterator<E> {
+        private int index = -1;
+
+        @Override
+        public boolean hasNext() {
+            return index + 1 < _list.size();
+        }
+
+        @Override
+        public E next() {
+            int tmp = index + 1;
+            if (tmp >= _list.size()) throw new NoSuchElementException();
+            index = tmp;
+            return get(tmp);
+        }
+
+        @Override
+        public void remove() {
+            SmartList.this.remove(index);
+        }
+    }
+
     @Override
     public boolean addAll(int index, Collection<? extends E> c) {
         Preconditions.checkNotNull(c);
@@ -130,7 +214,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
                     try {
                         return wrapElementAsync(obj).get();
                     } catch (Exception e) {
-                        System.err.println(e.getMessage());
+                        log.error(e.getMessage(), e);
                         return null;
                     }
                 })
@@ -147,6 +231,140 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return addedElem[0] > 0;
     }
 
+    protected class SimpleListIterator implements ListIterator<E> {
+        private int index;
+
+        public SimpleListIterator() {
+            index = -1;
+        }
+
+        public SimpleListIterator(int index) {
+            if (index < 0 || index > _list.size())
+                throw new IndexOutOfBoundsException();
+            this.index = index - 1;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index + 1 < _list.size();
+        }
+
+        @Override
+        public E next() {
+            int tmp = index + 1;
+            if (tmp >= _list.size()) throw new NoSuchElementException();
+            index = tmp;
+            return get(tmp);
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            int tmp = index - 1;
+            return tmp >= 0 && tmp < _list.size();
+        }
+
+        @Override
+        public E previous() {
+            int tmp = index - 1;
+            if (!(tmp >= 0 && tmp < _list.size()))
+                throw new NoSuchElementException();
+            index = tmp;
+            return get(tmp);
+        }
+
+        @Override
+        public int nextIndex() {
+            return Math.min(index + 1, _list.size());
+        }
+
+        @Override
+        public int previousIndex() {
+            return Math.max(index - 1, _list.size());
+        }
+
+        @Override
+        public void remove() {
+            SmartList.this.remove(index);
+        }
+
+        @Override
+        public void set(E e) {
+            SmartList.this.set(index, e);
+        }
+
+        @Override
+        public void add(E e) {
+            SmartList.this.add(index++, e);
+        }
+    }
+
+    public class WeightLimitListener implements Observer {
+        //        boolean started = false;
+        final ReentrantLock lock = new ReentrantLock();
+        public ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        @Override
+        public void update(Observable o, Object arg) {
+            long l = ((ObservableLong) arg).get();
+
+            final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
+            if (l > calculatedLimit /*&& !started*/) {
+//                executorService.submit(() -> {
+//                    tryToShrink(calculatedLimit);
+//                });
+//                started = true;
+                _listTasks.submit(() -> {
+                    lock.lock();
+                    try {
+                        tryToShrink(calculatedLimit);
+                    } finally {
+                        lock.unlock();
+                    }
+                });
+            }
+        }
+
+        private void tryToShrink(long newVal) {
+            long recoveredSpace = 0;
+            if (newVal >= currentWeight.get())
+                return;
+            boolean breakOuterLoop = false;
+            for (int attemptLeft = NUM_OF_ATTEMPTS_TO_SHRINK_LIST; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
+                for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0; --counter) {
+                    recoveredSpace += demoteElements(1);
+
+                    if (newVal >= currentWeight.get() - recoveredSpace) {
+                        breakOuterLoop = true;
+                        break;
+                    }
+                }
+            }
+
+//            log.debug("Recovered space: " + recoveredSpace);
+//            started = true;
+//            currentWeight.subtract(recoveredSpace);
+            currentWeight.subtractWithoutNotify(recoveredSpace);
+        }
+    }
+
+    private class DemoteTimer extends TimerTask {
+        // TODO: rozwiązać problem - o ile stopni degradować?
+
+        @Override
+        public void run() {
+            _list.forEach(le -> {
+                long diff = System.nanoTime() - le.getTimeCreated();
+                int useC = le.getUseCount();
+                if (useC == 0 || diff / useC > usesPerCycle * timeLimit) {
+                    try {
+                        _decisionTree.demote(le);
+                    } catch (MempressException e) {
+                    }
+                }
+            });
+        }
+    }
+
     @Override
     public E set(int index, E element) {
         Preconditions.checkNotNull(element);
@@ -160,10 +378,11 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             currentWeight.add(el.getSize());
             return old.get();
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            log.error(e.getMessage(), e);
             return null;
         }
     }
+
 
     @Override
     public void add(int index, E element) {
@@ -176,9 +395,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             _serializationQueue.add(el);
             currentWeight.add(el.getSize());
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            log.error(e.getMessage(), e);
         }
     }
+
 
     @Override
     public E remove(int index) {
@@ -193,6 +413,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return obj;
     }
 
+
     /**
      * Od momentu odczytania elementu, jest on trzymany w formie zdekodowanej
      */
@@ -203,6 +424,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         _decisionTree.goBackToHighestState(sle);
         return sle.get();
     }
+
 
     @Override
     public boolean add(E e) {
@@ -218,10 +440,11 @@ public class SmartList<E> implements List<E>, Iterable<E> {
             currentWeight.add(element.getSize());
             return ret;
         } catch (InterruptedException | ExecutionException ex) {
-            System.err.println(ex.getMessage());
+            log.error(ex.getMessage(), ex);
             return false;
         }
     }
+
 
     @Override
     public boolean removeAll(Collection<?> c) {
@@ -253,6 +476,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return modified;
     }
 
+
     /**
      * Niezaimplementowane
      *
@@ -264,6 +488,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
+
     @Override
     public void clear() {
         _list.clear();
@@ -273,6 +498,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     //----------------------------------------------------------------
     //  ROZMIARY, POJEMNOSC ITP.
     //----------------------------------------------------------------
+
 
     @Override
     public int size() {
@@ -307,15 +533,6 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return counter == colsize;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        return _list.equals(o);
-    }
-
-    @Override
-    public int hashCode() {
-        return _list.hashCode();
-    }
 
     @Override
     public int indexOf(Object o) {
@@ -425,31 +642,6 @@ public class SmartList<E> implements List<E>, Iterable<E> {
     // METODY ZWIĄZANE Z FUNKCJONALNOSCIĄ LISTY ORAZ METODY SPOZA List<E>
     //--------------------------------------------------------------------
 
-    // TODO: Dokończyć pisanie
-    protected long demoteElements(int numOfElements) {
-        long releasedBytes = 0;
-        long tmp;
-        for (int i = 0; i < numOfElements; ++i) {
-            try {
-                ListElement<E> sle = null;
-                sle = _serializationQueue.poll();
-                if (sle == null) continue;
-
-                tmp = sle.getSize();
-                sle = _decisionTree.demote(sle);
-                if (sle == null)
-                    continue;
-                releasedBytes += tmp - sle.getSize();
-
-                _serializationQueue.add(sle);
-
-            } catch (MempressException me) {
-//                System.err.println("Przechwycono wyjatek: " + me.getMessage());
-            }
-        }
-
-        return releasedBytes;
-    }
 
     /**
      * Ta metoda TYLKO dostarcza element do dodania. Dodawanie do listy nie może się tutaj znaleźć
@@ -462,7 +654,7 @@ public class SmartList<E> implements List<E>, Iterable<E> {
 
         ListElement<E> listElement = null;
 
-        for (int i = 0; i < numOfAttemptsToShrinkList; ++i)
+        for (int i = 0; i < NUM_OF_ATTEMPTS_TO_SHRINK_LIST; ++i)
             try {
                 listElement = _decisionTree.processObject(obj);
                 listElement.setIdentityHC(System.identityHashCode(obj));
@@ -488,183 +680,10 @@ public class SmartList<E> implements List<E>, Iterable<E> {
         return pred;
     }
 
-    public long getMaximumWeight() {
-        return weightLimit;
-    }
-
-    public long getCurrentWeight() {
-        return currentWeight.get();
-    }
-
-    public long getTimeLimit() {
-        return timeLimit;
-    }
-
-    public int getUsesPerCycle() {
-        return usesPerCycle;
-    }
-
-    public void setUsesPerCycle(int usesPerCycle) {
-        this.usesPerCycle = usesPerCycle;
-    }
 
     //--------------------------------------------------------------------
     // KLASY WEWNETRZNE
     //--------------------------------------------------------------------
 
-    protected class SimpleIterator implements Iterator<E> {
-        private int index = -1;
 
-        @Override
-        public boolean hasNext() {
-            return index + 1 < _list.size();
-        }
-
-        @Override
-        public E next() {
-            int tmp = index + 1;
-            if (tmp >= _list.size()) throw new NoSuchElementException();
-            index = tmp;
-            return get(tmp);
-        }
-
-        @Override
-        public void remove() {
-            SmartList.this.remove(index);
-        }
-    }
-
-    protected class SimpleListIterator implements ListIterator<E> {
-        private int index;
-
-        public SimpleListIterator() {
-            index = -1;
-        }
-
-        public SimpleListIterator(int index) {
-            if (index < 0 || index > _list.size())
-                throw new IndexOutOfBoundsException();
-            this.index = index - 1;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return index + 1 < _list.size();
-        }
-
-        @Override
-        public E next() {
-            int tmp = index + 1;
-            if (tmp >= _list.size()) throw new NoSuchElementException();
-            index = tmp;
-            return get(tmp);
-        }
-
-        @Override
-        public boolean hasPrevious() {
-            int tmp = index - 1;
-            return tmp >= 0 && tmp < _list.size();
-        }
-
-        @Override
-        public E previous() {
-            int tmp = index - 1;
-            if (!(tmp >= 0 && tmp < _list.size()))
-                throw new NoSuchElementException();
-            index = tmp;
-            return get(tmp);
-        }
-
-        @Override
-        public int nextIndex() {
-            return Math.min(index + 1, _list.size());
-        }
-
-        @Override
-        public int previousIndex() {
-            return Math.max(index - 1, _list.size());
-        }
-
-        @Override
-        public void remove() {
-            SmartList.this.remove(index);
-        }
-
-        @Override
-        public void set(E e) {
-            SmartList.this.set(index, e);
-        }
-
-        @Override
-        public void add(E e) {
-            SmartList.this.add(index++, e);
-        }
-    }
-
-    class WeightLimitListener implements Observer {
-        //        boolean started = false;
-        final ReentrantLock lock = new ReentrantLock();
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        @Override
-        public void update(Observable o, Object arg) {
-            long l = ((ObservableLong) arg).get();
-
-            final long calculatedLimit = ((weightLimit * 9) / 10) + 1;
-            if (l > calculatedLimit /*&& !started*/) {
-//                executorService.submit(() -> {
-//                    tryToShrink(calculatedLimit);
-//                });
-//                started = true;
-                _listTasks.submit(() -> {
-                    lock.lock();
-                    try {
-                        tryToShrink(calculatedLimit);
-                    } finally {
-                        lock.unlock();
-                    }
-                });
-            }
-        }
-
-        private void tryToShrink(long newVal) {
-            long recoveredSpace = 0;
-            if (newVal >= currentWeight.get())
-                return;
-            boolean breakOuterLoop = false;
-            for (int attemptLeft = numOfAttemptsToShrinkList; attemptLeft > 0 && !breakOuterLoop; --attemptLeft) {
-                for (int counter = Math.max(_serializationQueue.size() / 2, 1); counter > 0; --counter) {
-                    recoveredSpace += demoteElements(1);
-
-                    if (newVal >= currentWeight.get() - recoveredSpace) {
-                        breakOuterLoop = true;
-                        break;
-                    }
-                }
-            }
-
-//            System.out.println("Recovered space: " + recoveredSpace);
-//            started = true;
-//            currentWeight.subtract(recoveredSpace);
-            currentWeight.subtractWithoutNotify(recoveredSpace);
-        }
-    }
-
-    private class DemoteTimer extends TimerTask {
-        // TODO: rozwiązać problem - o ile stopni degradować?
-
-        @Override
-        public void run() {
-            _list.forEach(le -> {
-                long diff = System.nanoTime() - le.getTimeCreated();
-                int useC = le.getUseCount();
-                if (useC == 0 || diff / useC > usesPerCycle * timeLimit) {
-                    try {
-                        _decisionTree.demote(le);
-                    } catch (MempressException e) {
-                    }
-                }
-            });
-        }
-    }
 }

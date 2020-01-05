@@ -1,5 +1,8 @@
 package mempress;
 
+import mempress.list.ListElement;
+import mempress.serialization.SerializerFactory;
+import mempress.serialization.SerializerType;
 import org.junit.Test;
 
 import java.io.Serializable;

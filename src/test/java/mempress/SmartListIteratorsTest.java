@@ -1,6 +1,16 @@
 package mempress;
 
 import com.google.common.base.Preconditions;
+import mempress.decision.DecisionSerializeByteArray;
+import mempress.decision.DecisionTree;
+import mempress.decision.DecisionTreeBuilder;
+import mempress.list.ListElement;
+import mempress.list.SmartList;
+import mempress.list.SmartListBuilder;
+import mempress.list.SmartListIterators;
+import mempress.serialization.Serializer;
+import mempress.serialization.SerializerFactory;
+import mempress.serialization.SerializerType;
 import org.junit.Before;
 import org.junit.Test;
 

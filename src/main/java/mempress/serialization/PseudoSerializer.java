@@ -1,4 +1,7 @@
-package mempress;
+package mempress.serialization;
+
+import mempress.ClassData;
+import mempress.MempressException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

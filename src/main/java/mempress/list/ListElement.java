@@ -1,6 +1,8 @@
-package mempress;
+package mempress.list;
 
 import com.google.common.base.Preconditions;
+import mempress.ClassData;
+import mempress.serialization.SerializerFactory;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -9,8 +11,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ListElement<E> implements Comparable<ListElement<E>> {
     protected ClassData data;
-    protected Class<E> objectType;
-    protected final ReentrantLock lock = new ReentrantLock();
+    public Class<E> objectType;
+    public final ReentrantLock lock = new ReentrantLock(); //todo protected/private
     private int useCount;
     private int identityHC;
     private final long timeCreated;

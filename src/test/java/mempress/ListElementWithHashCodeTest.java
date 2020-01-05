@@ -1,5 +1,10 @@
 package mempress;
 
+import mempress.list.ListElement;
+import mempress.list.ListElementWithHashCode;
+import mempress.serialization.SerializerFactory;
+import mempress.serialization.SerializerType;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -22,6 +27,11 @@ public class ListElementWithHashCodeTest {
         hcSerializableClass = new HCSerializableClass(_le2int, _le2String);
         cd = SerializerFactory.createSerializer(SerializerType.NoSerialized).ser(hcSerializableClass);
         _le2 = new ListElementWithHashCode<>(cd, (Class<HCSerializableClass>) hcSerializableClass.getClass(), hcSerializableClass.hashCode());
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        _le1.getData().getData();
     }
 
     @Test

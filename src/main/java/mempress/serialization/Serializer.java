@@ -1,4 +1,6 @@
-package mempress;
+package mempress.serialization;
+
+import mempress.ClassData;
 
 public interface Serializer {
 

@@ -1,4 +1,6 @@
-package mempress;
+package mempress.serialization;
+
+import mempress.MempressException;
 
 import java.util.Collections;
 import java.util.HashMap;

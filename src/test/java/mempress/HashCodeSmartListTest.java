@@ -1,5 +1,8 @@
 package mempress;
 
+import mempress.decision.DecisionTreeBuilder;
+import mempress.list.HashCodeSmartList;
+import mempress.list.ListElementWithHashCode;
 import org.junit.Before;
 import org.junit.Test;
 

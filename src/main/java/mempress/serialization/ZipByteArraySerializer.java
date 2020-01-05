@@ -1,8 +1,12 @@
-package mempress;
+package mempress.serialization;
+
+import mempress.ClassData;
+import mempress.MempressException;
+import mempress.compression.QuickLZ;
 
 import java.io.*;
 
-public class ByteArraySerializer implements Serializer {
+public class ZipByteArraySerializer implements Serializer {
 
     @Override
     public ClassData ser(Object obj) {
@@ -12,8 +16,10 @@ public class ByteArraySerializer implements Serializer {
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             oos.writeObject(obj);
             byte[] b = baos.toByteArray();
+            byte[] b_compressed = QuickLZ.compress(b, 1);
+            b = null;
 
-            return new ClassData(SerializerType.ByteArraySerializer, b, b.length);
+            return new ClassData(SerializerType.ZipByteArraySerializer, b_compressed, b_compressed.length);
 
         } catch (IOException e) {
             throw new MempressException("Couldn't serialize ByteArray");
@@ -23,7 +29,8 @@ public class ByteArraySerializer implements Serializer {
     @Override
     public Object des(ClassData cd) {
 
-        ByteArrayInputStream bais = new ByteArrayInputStream((byte[]) cd.getData());
+        byte[] b = QuickLZ.decompress((byte[]) cd.getData());
+        ByteArrayInputStream bais = new ByteArrayInputStream(b);
         Object o = null;
         try {
             ObjectInputStream ois = new ObjectInputStream(bais);
@@ -37,7 +44,7 @@ public class ByteArraySerializer implements Serializer {
 
     @Override
     public ClassData fastForward(ClassData o) {
-        Object data = o.getData();
-        return ser(data);
+        Object cd = o.getData();
+        return ser(cd);
     }
 }

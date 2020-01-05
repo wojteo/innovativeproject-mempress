@@ -1,28 +1,41 @@
-package mempress;
+package mempress.serialization;
+
+import com.google.common.io.ByteStreams;
+import mempress.ClassData;
+import mempress.MempressException;
+import mempress.compression.QuickLZ;
 
 import java.io.*;
 
-public class FileSerializer implements Serializer {
+import static mempress.utils.IOUtils.closeQuietly;
+
+public class ZipFileSerializer implements Serializer {
 
     @Override
     public ClassData ser(Object obj) {
 
         try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(obj);
+            byte[] b = baos.toByteArray();
+            baos.close();
+            oos.close();
+
+            byte[] b_compressed = QuickLZ.compress(b, 1);
+            b = null;
+
+
             String tDir = System.getProperty("user.dir");// java.io.tmpdir");
             File tFile = File.createTempFile("tmpfile", ".mempress", new File(
                     tDir));
-
-            FileOutputStream fos = new FileOutputStream(tFile);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-            oos.writeObject(obj);
-            fos.flush();
-            fos.close();
-            oos.close();
-
             tFile.deleteOnExit();
+            FileOutputStream fos = new FileOutputStream(tFile);
+            fos.write(b_compressed);
+            fos.close();
 
-            return new ClassData(SerializerType.FileSerializer, tFile, 0) {
+
+            return new ClassData(SerializerType.ZipFileSerializer, tFile, 0) {
                 @Override
                 protected void finalize() {
                     try {
@@ -39,15 +52,16 @@ public class FileSerializer implements Serializer {
     @Override
     public Object des(ClassData cd) {
 
-        FileInputStream bais;
+        FileInputStream fis;
         Object o = null;
         try {
-            bais = new FileInputStream((File) cd.getData());
-            ObjectInputStream ois = new ObjectInputStream(bais);
+            fis = new FileInputStream((File) cd.getData());
+            byte[] b = QuickLZ.decompress(ByteStreams.toByteArray(fis));
+            ByteArrayInputStream bais = new ByteArrayInputStream(b);
+            ObjectInputStream oos = new ObjectInputStream(bais);
+            o = oos.readObject();
 
-            o = ois.readObject();
-            ois.close();
-        } catch (ClassNotFoundException | IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             throw new MempressException("Couldn't deserialize file");
         }
 
@@ -60,14 +74,12 @@ public class FileSerializer implements Serializer {
         FileOutputStream fos = null;
         try {
             String tDir = System.getProperty("user.dir");// java.io.tmpdir");
-            File tFile = File.createTempFile("tmpfile", ".mempress", new File(
-                    tDir));
+            File tFile = File.createTempFile("tmpfile", ".mempress", new File(tDir));
             tFile.deleteOnExit();
-
             fos = new FileOutputStream(tFile);
             fos.write(data);
 
-            return new ClassData(SerializerType.FileSerializer, tFile, 0) {
+            return new ClassData(SerializerType.ZipFileSerializer, tFile, 0) {
                 @Override
                 protected void finalize() {
                     try {
@@ -76,16 +88,10 @@ public class FileSerializer implements Serializer {
                     }
                 }
             };
-        } catch (Exception e) {
-            throw new MempressException("Couldn't serialize file");
+        } catch (IOException e) {
+            throw new MempressException("Couldn't deserialize file");
         } finally {
-            if (fos != null) {
-                try {
-                    fos.flush();
-                    fos.close();
-                } catch (Exception e) {
-                }
-            }
+            closeQuietly(fos);
         }
     }
 }

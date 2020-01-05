@@ -1,4 +1,4 @@
-package mempress;
+package mempress.decision;
 
 import com.google.common.base.Preconditions;
 
@@ -40,7 +40,7 @@ public class DecisionTreeBuilder<E> {
 
     public DecisionTreeBuilder<E> addTreeElements(Collection<? extends DecisionTree.DecisionTreeElement<E>> elements) {
         Preconditions.checkNotNull(elements);
-        Preconditions.checkArgument(elements.size() > 0, "Collection has to have at least one element");
+        Preconditions.checkArgument(!elements.isEmpty(), "Collection has to have at least one element");
 
         buildObject.processors.addAll(elements);
 

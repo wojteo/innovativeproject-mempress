@@ -1,6 +1,7 @@
-package mempress;
+package mempress.list;
 
 import com.google.common.base.Preconditions;
+import mempress.decision.DecisionTree;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -14,22 +15,7 @@ public class HashCodeSmartList<E> extends SmartList<E> {
     //    protected Map<ListElementWithHashCode<E>, Integer> holdElements;
     protected Set<ListElementWithHashCode<E>> holdElements;
 
-    protected HashCodeSmartList() {
-        init();
-    }
-
-    protected HashCodeSmartList(long maxWeight) {
-        super(maxWeight);
-        init();
-    }
-
-    protected HashCodeSmartList(DecisionTree<E> decTree, long maxWeight) {
-        super(decTree, maxWeight);
-        init();
-    }
-
-    protected HashCodeSmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
-        super(decTree, maxWeight, timeLimit);
+    public HashCodeSmartList() {
         init();
     }
 
@@ -39,6 +25,21 @@ public class HashCodeSmartList<E> extends SmartList<E> {
         } else {
             holdElements = new HashSet<>();
         }
+    }
+
+    public HashCodeSmartList(long maxWeight) {
+        super(maxWeight);
+        init();
+    }
+
+    public HashCodeSmartList(DecisionTree<E> decTree, long maxWeight) {
+        super(decTree, maxWeight);
+        init();
+    }
+
+    public HashCodeSmartList(DecisionTree<E> decTree, long maxWeight, long timeLimit) {
+        super(decTree, maxWeight, timeLimit);
+        init();
     }
 
     @Override
@@ -64,7 +65,7 @@ public class HashCodeSmartList<E> extends SmartList<E> {
     }
 
     @Override
-    protected ListElement<E> wrapToListElement(E obj) {
+    public ListElement<E> wrapToListElement(E obj) {
         ListElement<E> le = super.wrapToListElement(obj);
         if (le == null)
             return null;

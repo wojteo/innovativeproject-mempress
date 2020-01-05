@@ -1,6 +1,13 @@
 package mempress;
 
 import com.google.common.base.Preconditions;
+import mempress.decision.DecisionSerializeFile;
+import mempress.decision.DecisionStoreIt;
+import mempress.decision.DecisionTreeBuilder;
+import mempress.list.ListElement;
+import mempress.list.SmartList;
+import mempress.list.SmartListBuilder;
+import mempress.serialization.SerializerType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -147,7 +154,8 @@ public class SmartListTest {
         }
 
         try {
-            _testedList.toArray(null);
+            SerializableClass[] o = null;
+            _testedList.toArray(o);
             fail();
         } catch (NullPointerException e) {
         }

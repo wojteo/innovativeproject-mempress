@@ -1,7 +1,14 @@
 package effitest;
 
 import com.google.common.base.Stopwatch;
-import mempress.*;
+import mempress.Immutable;
+import mempress.decision.DecisionTree;
+import mempress.decision.DecisionTreeBuilder;
+import mempress.decision.DecisionZipSerializeFile;
+import mempress.list.SmartList;
+import mempress.list.SmartListBuilder;
+import mempress.list.SmartListIterators;
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -13,38 +20,14 @@ import java.util.concurrent.TimeUnit;
  * Created by Bartek on 2014-12-18.
  */
 public class IteratorsEfficiencyTest {
+    private static final Logger log = Logger.getLogger(IteratorsEfficiencyTest.class);
+    private final int numOfElements;
     private SmartList<TestClass> smartList;
     private long[] time1, time2;
-    private final int numOfElements;
 
     public IteratorsEfficiencyTest(int numOfElements) {
         this.numOfElements = numOfElements;
     }
-
-    private void init() {
-        DecisionTree<TestClass> dt = DecisionTreeBuilder
-                .<TestClass>create()
-//                .addTreeElement(new DecisionStoreIt<>())
-//                .addTreeElement(new DecisionSerializeByteArray<>())
-//                .addTreeElement(new DecisionSerializeFile<>())
-                .addTreeElement(new DecisionZipSerializeFile<>())
-                .build();
-        smartList = SmartListBuilder.<TestClass>create()
-                .decisionTree(dt)
-//                .weightLimit(numOfElements * 4)
-                .build();
-        time1 = (time1 == null) ? new long[numOfElements] : time1;
-        time2 = (time2 == null) ? new long[numOfElements] : time2;
-    }
-
-    private void generateElements() {
-        for (int i = 1; i <= numOfElements; ++i) {
-            TestClass tc = new TestClass(i, Math.pow(i, 2));
-            smartList.add(tc);
-        }
-
-    }
-
 
     public static void main(String[] args) {
         IteratorsEfficiencyTest efficiencyTest = new IteratorsEfficiencyTest(10000);
@@ -79,13 +62,36 @@ public class IteratorsEfficiencyTest {
                 averageTime2 = Arrays.stream(efficiencyTest.time2).average().getAsDouble();
         long sumTime1 = Arrays.stream(efficiencyTest.time1).sum(),
                 sumTime2 = Arrays.stream(efficiencyTest.time2).sum();
-        System.out.println("[Standard iterator] Entire time in Ms: " + sumTime1 + ", average: " + averageTime1);
-        System.out.println("[Preload iterator] Entire time in Ms: " + sumTime2 + ", average: " + averageTime2);
+        log.debug("[Standard iterator] Entire time in Ms: " + sumTime1 + ", average: " + averageTime1);
+        log.debug("[Preload iterator] Entire time in Ms: " + sumTime2 + ", average: " + averageTime2);
 
         for (int i = 0; i < 100; ++i)
-            System.out.println(String.format("(%d, %d) ", efficiencyTest.time1[i], efficiencyTest.time2[i]));
+            log.debug(String.format("(%d, %d) ", efficiencyTest.time1[i], efficiencyTest.time2[i]));
 
-        System.out.println();
+    }
+
+    private void init() {
+        DecisionTree<TestClass> dt = DecisionTreeBuilder
+                .<TestClass>create()
+//                .addTreeElement(new DecisionStoreIt<>())
+//                .addTreeElement(new DecisionSerializeByteArray<>())
+//                .addTreeElement(new DecisionSerializeFile<>())
+                .addTreeElement(new DecisionZipSerializeFile<>())
+                .build();
+        smartList = SmartListBuilder.<TestClass>create()
+                .decisionTree(dt)
+//                .weightLimit(numOfElements * 4)
+                .build();
+        time1 = (time1 == null) ? new long[numOfElements] : time1;
+        time2 = (time2 == null) ? new long[numOfElements] : time2;
+    }
+
+    private void generateElements() {
+        for (int i = 1; i <= numOfElements; ++i) {
+            TestClass tc = new TestClass(i, Math.pow(i, 2));
+            smartList.add(tc);
+        }
+
     }
 }
 
@@ -115,6 +121,16 @@ class TestClass implements Serializable, Immutable {
     }
 
     @Override
+    public int hashCode() {
+        int result;
+        long temp;
+        result = ival;
+        temp = Double.doubleToLongBits(dval);
+        result = 31 * result + (int) (temp ^ (temp >>> 32));
+        return result;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -123,15 +139,5 @@ class TestClass implements Serializable, Immutable {
 
         if (Double.compare(testClass.dval, dval) != 0) return false;
         return ival == testClass.ival;
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = ival;
-        temp = Double.doubleToLongBits(dval);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        return result;
     }
 }

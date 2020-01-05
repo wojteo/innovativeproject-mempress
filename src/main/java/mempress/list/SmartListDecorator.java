@@ -1,4 +1,4 @@
-package mempress;
+package mempress.list;
 
 /**
  * Created by Bartek on 2014-11-26.

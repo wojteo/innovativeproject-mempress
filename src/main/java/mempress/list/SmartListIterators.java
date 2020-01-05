@@ -1,4 +1,4 @@
-package mempress;
+package mempress.list;
 
 import com.google.common.base.Preconditions;
 
@@ -65,14 +65,14 @@ public class SmartListIterators {
     }
 
 
-    static class PreloadIterator<T> implements Iterator<T> {
+    public static class PreloadIterator<T> implements Iterator<T> {
         private final SmartList<T> smartList;
         private int index = -1;
         private final int prepareInAdv;
         private final ArrayDeque<Future<T>> buffer;
         private final int step;
         private boolean init = false;
-        protected final ExecutorService tasks;
+        public final ExecutorService tasks;
 
         public PreloadIterator(SmartList<T> sl) {
             this(sl, 0, 2, 1);

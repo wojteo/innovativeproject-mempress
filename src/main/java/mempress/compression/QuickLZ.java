@@ -1,4 +1,4 @@
-package mempress;
+package mempress.compression;
 
 // QuickLZ data compression library
 // Copyright (C) 2006-2011 Lasse Mikkel Reinhold

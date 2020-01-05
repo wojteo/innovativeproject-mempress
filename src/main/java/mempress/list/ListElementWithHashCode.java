@@ -1,4 +1,6 @@
-package mempress;
+package mempress.list;
+
+import mempress.ClassData;
 
 /**
  * Created by Bartek on 2014-11-25.

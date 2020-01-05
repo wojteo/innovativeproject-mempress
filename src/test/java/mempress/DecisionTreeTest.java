@@ -1,5 +1,8 @@
 package mempress;
 
+import mempress.decision.*;
+import mempress.list.ListElement;
+import mempress.serialization.SerializerType;
 import org.junit.Before;
 import org.junit.Test;
 

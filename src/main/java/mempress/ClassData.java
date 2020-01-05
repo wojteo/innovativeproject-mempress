@@ -1,5 +1,7 @@
 package mempress;
 
+import mempress.serialization.SerializerType;
+
 /**
  * Created by Bartek on 2014-11-20.
  */

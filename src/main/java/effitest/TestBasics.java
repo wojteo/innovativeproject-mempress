@@ -1,7 +1,14 @@
 package effitest;
 
 import com.google.common.base.Stopwatch;
-import mempress.*;
+import mempress.Immutable;
+import mempress.MempressException;
+import mempress.decision.DecisionSerializeByteArray;
+import mempress.decision.DecisionSerializeFile;
+import mempress.decision.DecisionTree;
+import mempress.decision.DecisionTreeBuilder;
+import mempress.list.SmartListBuilder;
+import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -12,7 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 class Bytewrap implements Serializable, Immutable {
-
+    private static final Logger log = Logger.getLogger(Bytewrap.class);
     private static final long serialVersionUID = -7608564785355110018L;
     public byte[] b;
 
@@ -37,7 +44,7 @@ class Bytewrap implements Serializable, Immutable {
 }
 
 public class TestBasics {
-
+    private static final Logger log = Logger.getLogger(TestBasics.class);
     public static int parametersQ;
 
     public static void main(String[] args) {
@@ -48,7 +55,7 @@ public class TestBasics {
 
 
         //files in format sampleX.txt where X is in[1, liczba_plikow]
-        System.out.println("Need 'sampleX.txt' files");
+        log.debug("Need 'sampleX.txt' files");
 
 //configuration variable declaration
         int addQ = 1180, igQ = 200, igrQ = 200;
@@ -68,7 +75,7 @@ public class TestBasics {
 
 //START reading configuration
         Console co = System.console();
-        System.out.println("Do you want to use configuration file?\n"
+        log.debug("Do you want to use configuration file?\n"
                 + "'n' for no, <filename> for yes");
         type = co.readLine();
 
@@ -79,7 +86,7 @@ public class TestBasics {
                     throw new Exception("Wrong ammount of parameters");
                 }
             } catch (Exception e) {
-                System.out.println("Failed to load configuration file properly");
+                log.debug("Failed to load configuration file properly");
                 tryConsole = true;
 
             }
@@ -154,7 +161,7 @@ public class TestBasics {
         List<Bytewrap> sl = null;
         switch (whichList) {
             case "0":
-                System.out.println("ArrayListSelected");
+                log.debug("ArrayListSelected");
                 sl = new ArrayList<Bytewrap>();
                 break;
             case "1":
@@ -166,7 +173,7 @@ public class TestBasics {
                 break;
             case "2": {
                 //Start-2-OnlyZipByteArray/File SmartList
-                System.out.println("SmartListSelected");
+                log.debug("SmartListSelected");
                 DecisionTree<Bytewrap> d = DecisionTreeBuilder
                         .<Bytewrap>create()
                         .addTreeElement(new DecisionSerializeByteArray())
@@ -191,7 +198,7 @@ public class TestBasics {
             case "4": {
 
                 //Start-4-OnlyZipByteArray/File HashCodeSmartList
-                System.out.println("SmartListSelected");
+                log.debug("SmartListSelected");
                 DecisionTree<Bytewrap> d = DecisionTreeBuilder
                         .<Bytewrap>create()
                         .addTreeElement(new DecisionSerializeByteArray())
@@ -207,7 +214,7 @@ public class TestBasics {
                 break;
             }
             default:
-                System.out.println("Didn't select List properly -> closing program");
+                log.debug("Didn't select List properly -> closing program");
                 System.exit(0);
         }
 //FINISH create list
@@ -215,7 +222,7 @@ public class TestBasics {
 //START TESTS
         try {
             Random rnd = new Random(seed1);
-            System.out.println("Starting insertOnly");
+            log.debug("Starting insertOnly");
             for (i = 0; i < addQ; i++) {
                 int x = rnd.nextInt(liczba_plikow) + 1;
                 int pos = sl.size();
@@ -245,11 +252,11 @@ public class TestBasics {
                 countAdd++;
                 fis.close();
 
-                System.out.println("list.add(" + pos + ", " + pth + "), list.size = " + sl.size());
+                log.debug("list.add(" + pos + ", " + pth + "), list.size = " + sl.size());
             }
-            System.out.println("Finished insertOnly");
+            log.debug("Finished insertOnly");
 
-            System.out.println("Starting getOnly");
+            log.debug("Starting getOnly");
             //co.readLine();
             for (i = 0; i < igQ; i++) {
                 //if(i%500==0) Thread.sleep(slip);
@@ -270,13 +277,13 @@ public class TestBasics {
                 tick++;
                 timeGet += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
                 countGet++;
-                System.out.println("list.get(" + pos + "), list.size = " + sl.size());
+                log.debug("list.get(" + pos + "), list.size = " + sl.size());
 
             }
-            System.out.println("Finished getOnly");
+            log.debug("Finished getOnly");
 
 
-            System.out.println("Starting insert-get");
+            log.debug("Starting insert-get");
             //co.readLine();
             for (i = 0; i < igQ; i++) {
                 //if(i%500==0) Thread.sleep(slip);
@@ -309,7 +316,7 @@ public class TestBasics {
                     countAdd++;
                     fis.close();
 
-                    System.out.println("list.add(" + pos + ", " + pth + "), list.size = " + sl.size());
+                    log.debug("list.add(" + pos + ", " + pth + "), list.size = " + sl.size());
                 } else {
                     //random get
                     @SuppressWarnings("unused")
@@ -322,12 +329,12 @@ public class TestBasics {
                     tick++;
                     timeGet += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
                     countGet++;
-                    System.out.println("list.get(" + pos + "), list.size = " + sl.size());
+                    log.debug("list.get(" + pos + "), list.size = " + sl.size());
                 }
             }
-            System.out.println("Finished Add-Get");
+            log.debug("Finished Add-Get");
 
-            System.out.println("Starting Add-Get-Remove");
+            log.debug("Starting Add-Get-Remove");
             //co.readLine();
             for (i = 0; i < igrQ; i++) {
                 //if(i%500==0) Thread.sleep(slip);
@@ -360,7 +367,7 @@ public class TestBasics {
                     countAdd++;
                     fis.close();
 
-                    System.out.println("list.add(" + pos + ", " + pth + "), list.size = " + sl.size());
+                    log.debug("list.add(" + pos + ", " + pth + "), list.size = " + sl.size());
                 } else if (what == 1 || what == 2) {
                     //random get
                     @SuppressWarnings("unused")
@@ -373,7 +380,7 @@ public class TestBasics {
                     tick++;
                     timeGet += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
                     countGet++;
-                    System.out.println("list.get(" + pos + "), list.size = " + sl.size());
+                    log.debug("list.get(" + pos + "), list.size = " + sl.size());
                 } else {
                     //random remove
                     @SuppressWarnings("unused")
@@ -386,13 +393,13 @@ public class TestBasics {
                     tick++;
                     timeRem += sw.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS);
                     countRem++;
-                    System.out.println("REM list.remove(" + pos + "), list.size = " + sl.size());
+                    log.debug("REM list.remove(" + pos + "), list.size = " + sl.size());
 
                 }
             }
-            System.out.println("Finished Add-Get-Remove");
+            log.debug("Finished Add-Get-Remove");
         } catch (OutOfMemoryError e) {
-            System.out.println("OOME :(");
+            log.debug("OOME :(");
             e.printStackTrace();
             System.gc();
         } catch (MempressException e) {
@@ -400,11 +407,11 @@ public class TestBasics {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            System.out.println("\nTotal: " + (countAdd + countGet + countRem) + " operations.");
-            System.out.println("\n" + countAdd + " Adds with avg time = " + nanoTime(timeAdd / countAdd));
-            System.out.println("\n" + countGet + " Gets with avg time = " + nanoTime(timeGet / countGet));
-            System.out.println("\n" + countRem + " Removes with avg time = " + nanoTime(timeRem / countRem));
-            System.out.println("\nDetailed measures saved in " + csv.getName() + " file");
+            log.debug("\nTotal: " + (countAdd + countGet + countRem) + " operations.");
+            log.debug("\n" + countAdd + " Adds with avg time = " + nanoTime(timeAdd / countAdd));
+            log.debug("\n" + countGet + " Gets with avg time = " + nanoTime(timeGet / countGet));
+            log.debug("\n" + countRem + " Removes with avg time = " + nanoTime(timeRem / countRem));
+            log.debug("\nDetailed measures saved in " + csv.getName() + " file");
         }
 //FINISH tests
 
@@ -419,15 +426,15 @@ public class TestBasics {
         }
 
 
-        System.out.println("Program was running for (seconds): " + nanoTime(swMain.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)));
-        System.out.println("Press enter for GC");
+        log.debug("Program was running for (seconds): " + nanoTime(swMain.elapsed(java.util.concurrent.TimeUnit.NANOSECONDS)));
+        log.debug("Press enter for GC");
         co.readLine();
         System.gc();
-        System.out.println("Press enter to delete+GC");
+        log.debug("Press enter to delete+GC");
         co.readLine();
         sl = null;
         System.gc();
-        System.out.println("Finished");
+        log.debug("Finished");
 
         System.exit(1);
     }
@@ -445,21 +452,21 @@ public class TestBasics {
         String[] confData = new String[parametersQ];
 
         Console co2 = System.console();
-        System.out.println("What size of weightLimit?");
+        log.debug("What size of weightLimit?");
         confData[0] = co2.readLine();
-        System.out.println("How many sample files?");
+        log.debug("How many sample files?");
         confData[1] = co2.readLine();
 
-        System.out.println("How many adds, inserts, add/inserts, add/insert/removes (one number for all) ?");
+        log.debug("How many adds, inserts, add/inserts, add/insert/removes (one number for all) ?");
         confData[2] = co2.readLine();
 
-        System.out.println("What seed for RNG?");
+        log.debug("What seed for RNG?");
         confData[3] = co2.readLine();
 
-        System.out.println("Write 0 for ArrayList, 1 or 2 for SmartList, 3 or 4 for HashCodeSmartList ");
+        log.debug("Write 0 for ArrayList, 1 or 2 for SmartList, 3 or 4 for HashCodeSmartList ");
         confData[4] = co2.readLine();
 
-        System.out.println("Give path to sample files");
+        log.debug("Give path to sample files");
         confData[5] = co2.readLine();
 
         return confData;
@@ -471,7 +478,7 @@ public class TestBasics {
         while (res.length() <= 9) {
             res += "0";
         }
-        res = res.substring(0, 9) + "." + res.substring(9, res.length());
+        res = res.substring(0, 9) + "." + res.substring(9);
         res = new StringBuilder(res).reverse().toString();
         return res;
     }

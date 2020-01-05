@@ -1,9 +1,14 @@
-package mempress;
+package mempress.decision;
 
-import mempress.DecisionTree.DecisionTreeElement;
-import mempress.DecisionTree.ObjectDataCarrier;
+import mempress.ClassData;
+import mempress.decision.DecisionTree.DecisionTreeElement;
+import mempress.decision.DecisionTree.ObjectDataCarrier;
+import mempress.list.ListElement;
+import mempress.serialization.Serializer;
+import mempress.serialization.SerializerFactory;
+import mempress.serialization.SerializerType;
 
-public class DecisionSerializeByteArray<E> implements DecisionTreeElement<E> {
+public class DecisionSerializeFile<E> implements DecisionTreeElement<E> {
 
     @Override
     public boolean checkConditions(E obj, ObjectDataCarrier metadata) {
@@ -13,34 +18,32 @@ public class DecisionSerializeByteArray<E> implements DecisionTreeElement<E> {
     @Override
     public ListElement<E> processObject(E obj, ObjectDataCarrier metadata) {
 
-//		long hash = obj.hashCode();
+        @SuppressWarnings("unchecked")
         Class<E> objType = (Class<E>) obj.getClass();
 
-        Serializer ser = SerializerFactory.createSerializer(SerializerType.ByteArraySerializer);
+        Serializer ser = SerializerFactory.createSerializer(SerializerType.FileSerializer);
         ClassData cd = ser.ser(obj);
 
-//		ListElement<E> le = new SerializedListElement<E>(cd, hash, objType);
         return new ListElement<>(cd, objType);
     }
 
     @Override
     public SerializerType getOperationType() {
-        // TODO Auto-generated method stub
-        return SerializerType.ByteArraySerializer;
+        return SerializerType.FileSerializer;
     }
 
     @Override
     public boolean fastForwardAvailable(SerializerType from) {
-        return from == SerializerType.NoSerialized;
+        return from == SerializerType.ByteArraySerializer;
     }
 
     @Override
     public ListElement<E> fastForward(ListElement<E> source) {
-        if (source.getData().getSerializerType() != SerializerType.NoSerialized)
+        if (source.getData().getSerializerType() != SerializerType.ByteArraySerializer)
             throw new UnsupportedOperationException("Not implemented yet");
         source.lock.lock();
         try {
-            ClassData classData = SerializerFactory.createSerializer(SerializerType.ByteArraySerializer).fastForward(source.getData());
+            ClassData classData = SerializerFactory.createSerializer(SerializerType.FileSerializer).fastForward(source.getData());
             return new ListElement<>(classData, source.getObjectType());
         } finally {
             source.lock.unlock();

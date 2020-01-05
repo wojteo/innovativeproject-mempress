@@ -2,6 +2,10 @@ package mempress; /**
  * Created by Bartek on 2014-11-28.
  */
 
+import mempress.decision.DecisionSerializeByteArray;
+import mempress.decision.DecisionStoreIt;
+import mempress.decision.DecisionTree;
+import mempress.decision.DecisionTreeBuilder;
 import org.junit.Before;
 import org.junit.Test;
 

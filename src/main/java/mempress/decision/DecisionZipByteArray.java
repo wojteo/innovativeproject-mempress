@@ -1,4 +1,10 @@
-package mempress;
+package mempress.decision;
+
+import mempress.ClassData;
+import mempress.list.ListElement;
+import mempress.serialization.Serializer;
+import mempress.serialization.SerializerFactory;
+import mempress.serialization.SerializerType;
 
 /**
  * Created by Bartek on 2014-12-19.

@@ -1,4 +1,4 @@
-package mempress;
+package mempress.serialization;
 
 public enum SerializerType {
     NoSerialized,

@@ -1,7 +1,12 @@
-package mempress;
+package mempress.decision;
 
-import mempress.DecisionTree.DecisionTreeElement;
-import mempress.DecisionTree.ObjectDataCarrier;
+import mempress.ClassData;
+import mempress.decision.DecisionTree.DecisionTreeElement;
+import mempress.decision.DecisionTree.ObjectDataCarrier;
+import mempress.list.ListElement;
+import mempress.serialization.Serializer;
+import mempress.serialization.SerializerFactory;
+import mempress.serialization.SerializerType;
 
 public class DecisionStoreIt<E> implements DecisionTreeElement<E> {
 

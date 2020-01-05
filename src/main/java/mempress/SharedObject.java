@@ -1,6 +1,7 @@
 package mempress;
 
 import com.google.common.base.Preconditions;
+import mempress.list.MutableListElement;
 
 /**
  * Created by Bartek on 2014-12-19.

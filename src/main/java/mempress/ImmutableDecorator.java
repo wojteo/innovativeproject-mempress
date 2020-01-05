@@ -1,6 +1,8 @@
 package mempress;
 
 import com.google.common.base.Preconditions;
+import mempress.list.SmartList;
+import mempress.list.SmartListDecorator;
 
 import java.util.Collection;
 import java.util.Iterator;
